@@ -1,4 +1,4 @@
-FROM ://microsoft.com
+FROM :microsoft.com
 WORKDIR /app
 RUN apt-get update && apt-get install -y python3-pip && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
