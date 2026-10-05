@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>SlotBuddy - Admin Track Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
+        .dashboard { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 15px; }
+        .metrics { display: flex; gap: 20px; margin-bottom: 30px; }
+        .card { flex: 1; background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; text-align: center; }
+        .card h2 { margin: 0; font-size: 32px; color: #38bdf8; }
+        .card p { margin: 5px 0 0 0; color: #94a3b8; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #334155; color: #38bdf8; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-Success { background: #065f46; color: #34d399; }
+        .status-Pending { background: #854d0e; color: #fef08a; }
+        .status-Failed { background: #991b1b; color: #f87171; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h1>📊 SlotBuddy ফাইল আপলোড ও বুকিং মনিটর</h1>
+    
+    <!-- প্রধান পরিসংখ্যান কাউন্টারসমূহ -->
+    <div class="metrics">
+        <div class="card">
+            <h2 id="total-uploads">0</h2>
+            <p>মোট আপলোড করা ফাইল</p>
+        </div>
+        <div class="card">
+            <h2 id="success-count" style="color: #22c55e;">0</h2>
+            <p>সফল বুকিং সেশন</p>
+        </div>
+        <div class="card">
+            <h2 id="failed-count" style="color: #ef4444;">0</h2>
+            <p>ব্যর্থ সেশন</p>
+        </div>
+    </div>
+
+    <h3>📋 লাইভ ফাইল ও সেশন প্রসেসিং লগ</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>সময়</th>
+                <th>পাসপোর্ট নম্বর</th>
+                <th>ভিসা সেন্টার</th>
+                <th>ফাইলের নাম</th>
+                <th>বর্তমান অবস্থা</th>
+            </tr>
+        </thead>
+        <tbody id="log-table-body">
+            <!-- ডাইনামিক ডেটা এখানে পুশ হবে -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function refreshAdminStats() {
+        try {
+            let response = await fetch('/admin/stats');
+            let data = await response.json();
+            
+            // কাউন্টারগুলো আপডেট করা
+            document.getElementById('total-uploads').innerText = data.total_uploads;
+            document.getElementById('success-count').innerText = data.successful_bookings;
+            document.getElementById('failed-count').innerText = data.failed_bookings;
+            
+            // টেবিল লগের তথ্য ডাইনামিকালি রেন্ডার করা
+            let tableBody = document.getElementById('log-table-body');
+            tableBody.innerHTML = '';
+            
+            // সর্বশেষ আপলোড হওয়া ফাইলটি সবার উপরে দেখানোর জন্য রিভার্স লুপ
+            data.history.reverse().forEach(entry => {
+                let row = `<tr>
+                    <td>${entry.time}</td>
+                    <td>${entry.passport}</td>
+                    <td>${entry.center}</td>
+                    <td>${entry.filename}</td>
+                    <td><span class="badge status-${entry.status.split(' ')[0]}">${entry.status}</span></td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } catch (error) {
+            console.error("অ্যাডমিন ডেটা লোড করা যাচ্ছে না।");
+        }
+    }
+
+    // প্রতি ৩ সেকেন্ড পর পর অ্যাডমিন ড্যাশবোর্ড স্বয়ংক্রিয়ভাবে রিফ্রেশ হবে
+    setInterval(refreshAdminStats, 3000);
+    window.onload = refreshAdminStats;
+</script>
+</body>
+</html>

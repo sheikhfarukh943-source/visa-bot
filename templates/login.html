@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>SlotBuddy - Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .login-card { background: #1e293b; padding: 30px; border-radius: 10px; width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        h3 { text-align: center; color: #38bdf8; margin-top: 0; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .error { color: #f87171; text-align: center; font-size: 14px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <h3>🔐 সিস্টেম লগইন</h3>
+    {% if error %} <div class="error">{{ error }}</div> {% endif %}
+    <form action="/login" method="POST">
+        <input type="text" name="username" placeholder="ইউজারনেম" required>
+        <input type="password" name="password" placeholder="পাসওয়ার্ড" required>
+        <button type="submit">লগইন</button>
+    </form>
+</div>
+</body>
+</html>
