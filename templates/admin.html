@@ -54,6 +54,8 @@
         .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
         .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
         .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        #bot-log-box { margin-top: 10px; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- সার্ভার ফিডব্যাক মেসেজ এরিয়া -->
+    <!-- নোটিফিকেশন মেসেজ এরিয়া -->
     <div id="flash-message-box" class="flash-message" style="display: none;"></div>
 
     <!-- 🤖 ১. আইভ্যাক সার্ভার হিট ও ওটিপি মনিটর উইজেট জোন -->
@@ -133,27 +135,27 @@
                 </div>
                 <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
+            <div id="bot-log-box"></div>
         </div>
         
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (বাটন ও রোল শতভাগ ফিক্সড) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (স্থায়ীভাবে সচল ও দৃশ্যমান) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <form id="create-user-form" onsubmit="return false;">
-                <div class="form-group">
-                    <label>নতুন ইউজারনেম</label>
-                    <input type="text" id="new-user" placeholder="Username" required>
+            <div class="form-group">
+                <label>নতুন ইউজারনেম</label>
+                <input type="text" id="new-user" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <label>পাসওয়ার্ড</label>
+                <div class="password-container">
+                    <input type="password" id="new-pass" placeholder="Password" required>
+                    <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                 </div>
-                <div class="form-group">
-                    <label>পাসওয়ার্ড</label>
-                    <div class="password-container">
-                        <input type="password" id="new-pass" placeholder="Password" required>
-                        <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>অ্যাকাউন্ট রোল</label>
-                    <select id="new-role">
-                        <option value="User">User (सहকারী)</option>
-                        <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
-                    </select>
-                </div>
+            </div>
+            <div class="form-group">
+                <label>অ্যাকাউন্ট রোল</label>
+                <select id="new-role">
+                    <option value="User">User (सहকারী)</option>
+                    <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
+                </select>
+            </div>
