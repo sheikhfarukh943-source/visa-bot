@@ -10,9 +10,10 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logout-btn { padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
         
-        /* সম্পূর্ণ নতুন ফিক্সড গ্রিড এলাইনমেন্ট */
-        .section-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 30px; width: 100%; }
-        .box { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; height: fit-content; }
+        .section-grid { display: flex; gap: 25px; margin-bottom: 30px; width: 100%; flex-wrap: wrap; }
+        .box { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; height: fit-content; min-width: 300px; box-sizing: border-box; }
+        .box-left { flex: 2; }
+        .box-right { flex: 1; }
         h3 { margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; }
         
         .form-group { margin-bottom: 12px; }
@@ -25,10 +26,9 @@
         .password-container input { padding-right: 45px; width: 100%; }
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         
-        /* বোতামগুলোর চিরস্থায়ী নেটিভ দৃশ্যমান স্টাইল */
         .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; text-decoration: none; }
         .submit-btn:hover { background: #0369a1; }
-        .green-btn { background: #22c55e !important; color: white; }
+        .green-btn { background: #22c55e !important; color: white !important; }
         .green-btn:hover { background: #16a34a !important; }
         
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -50,6 +50,7 @@
         .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
         .state-waiting_for_otp { background: #854d0e; color: #fef08a; }
         .state-slot_booking_in_progress { background: #1e3a8a; color: #60a5fa; }
+        
         .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
         .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
         .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
@@ -61,11 +62,6 @@
         <h1>SlotBuddy IVAC প্রফেশনাল কন্ট্রোল প্যানেল</h1>
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
-
-    <!-- নোটিফিকেশন ব্যানার এরিয়া -->
-    {% if stats and stats.last_message %}
-        <div class="flash-message" style="background: #065f46; color: #34d399; border: 1px solid #34d399;">{{ stats.last_message }}</div>
-    {% endif %}
 
     <!-- 🤖 ১. আইভ্যাক ওটিপি মনিটর উইজেট জোন -->
     <div class="live-bot-zone">
@@ -101,7 +97,7 @@
 
     <div class="section-grid">
         <!-- ২. প্রিলোড ফর্ম প্যানেল -->
-        <div class="box">
+        <div class="box box-left">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
                 <div class="form-row">
@@ -138,6 +134,7 @@
                         </select>
                     </div>
                 </div>
+                <!-- ১০০% ফিক্সড ৪ জন মেম্বারের ৪টি আপলোড বক্স -->
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ১ (Primary Webfile)*</span>
@@ -151,3 +148,5 @@
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
                         <div class="file-input-wrapper"><input type="file" name="file_3"></div>
                     </div>
+                    <div class="member-upload-row">
+                        <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
