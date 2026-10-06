@@ -175,7 +175,7 @@
     }
 
     async function uploadGroupData() {
-        const ivac_phone = document.getElementById('iac_phone') ? document.getElementById('iac_phone').value : document.getElementById('ivac_phone').value;
+        const ivac_phone = document.getElementById('ivac_phone').value;
         const ivac_pass = document.getElementById('ivac_pass').value;
         const center = document.getElementById('center').value;
         const visa_type = document.getElementById('visa_type').value;
@@ -193,3 +193,5 @@
 
         const formData = new FormData();
         formData.append('ivac_phone', ivac_phone);
+        formData.append('ivac_pass', ivac_pass);
+        formData.append('center', center);
