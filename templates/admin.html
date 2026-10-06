@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - IVAC Custom Control Panel</title>
+    <title>SlotBuddy - IVAC Management Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -17,10 +17,12 @@
         .form-row .form-group { flex: 1; margin-bottom: 0; }
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
+        
+        /* Native show password alignment */
         .password-container { position: relative; display: flex; align-items: center; width: 100%; }
         .password-container input { padding-right: 45px; width: 100%; }
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
-        .toggle-password:hover { color: #38bdf8; }
+
         button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
         button.submit-btn:hover { background: #0369a1; }
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -33,7 +35,10 @@
         table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
         th { background: #334155; color: #38bdf8; }
-        #bot-log-box { margin-top: 10px; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; display: none; font-weight: bold; }
+        
+        .flash-message { padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; }
+        .flash-success { background: #065f46; color: #34d399; border: 1px solid #34d399; }
+        .flash-error { background: #991b1b; color: #f87171; border: 1px solid #f87171; }
     </style>
 </head>
 <body>
@@ -42,19 +47,30 @@
         <h1>SlotBuddy IVAC প্রফেশনাল কন্ট্রোল প্যানেল</h1>
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
+
+    <!-- Display native server responses -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="section-grid">
+        <!-- Native Form Submission for Preloading Data -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
-            <form id="ivac-group-form" onsubmit="return false;">
+            <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
-                        <input type="text" id="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
+                        <input type="text" name="ivac_phone" required>
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
                         <div class="password-container">
-                            <input type="password" id="ivac_pass" placeholder="••••••••" required>
+                            <input type="password" id="ivac_pass" name="ivac_pass" required>
                             <span class="toggle-password" onclick="togglePassword('ivac_pass', this)">👁️</span>
                         </div>
                     </div>
@@ -62,7 +78,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
-                        <select id="center">
+                        <select name="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
                             <option value="Rajshahi">Rajshahi</option>
@@ -72,7 +88,7 @@
                     </div>
                     <div class="form-group">
                         <label>ভিসা টাইপ (Visa Type)</label>
-                        <select id="visa_type">
+                        <select name="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
@@ -83,53 +99,58 @@
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row" style="border-color: #38bdf8;">
                         <span class="member-title" style="color: #38bdf8;">📄 মেম্বার ১ (Primary Webfile)*</span>
-                        <div class="file-input-wrapper"><input type="file" id="file_1" required></div>
+                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" id="file_2"></div>
+                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" id="file_3"></div>
+                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" id="file_4"></div>
+                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
                     </div>
                 </div>
-                <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
+                <button type="submit" class="submit-btn">👥 প্রিলোড শুরু করুন</button>
             </form>
-            <div id="bot-log-box"></div>
         </div>
+        
+        <!-- Native Form Submission for Creating Users -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <div class="form-group">
-                <label>নতুন ইউজারনেম</label>
-                <input type="text" id="new-user">
-            </div>
-            <div class="form-group">
-                <label>পাসওয়ার্ড</label>
-                <div class="password-container">
-                    <input type="password" id="new-pass">
-                    <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
+            <form action="/admin/create-user" method="POST">
+                <div class="form-group">
+                    <label>নতুন ইউজারনেম</label>
+                    <input type="text" name="username" required>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>অ্যাকাউন্ট রোল</label>
-                <select id="new-role">
-                    <option value="Admin">Admin</option>
-                    <option value="User">User</option>
-                </select>
-            </div>
-            <button type="button" class="submit-btn" style="background: #22c55e;" onclick="createUserAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+                <div class="form-group">
+                    <label>পাসওয়ার্ড</label>
+                    <div class="password-container">
+                        <input type="password" id="new-pass" name="password" required>
+                        <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>অ্যাকাউন্ট রোল</label>
+                    <select name="role">
+                        <option value="Admin">Admin</option>
+                        <option value="User">User</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" style="background: #22c55e;">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+            </form>
         </div>
     </div>
+    
     <div class="metrics">
-        <div class="card"><h2><span id="total-uploads">0</span></h2><p>মোট আপলোড করা সেশন</p></div>
-        <div class="card"><h2 id="success-count" style="color: #22c55e;">0</h2><p>সফল প্রসেস</p></div>
-        <div class="card"><h2 id="failed-count" style="color: #ef4444;">0</h2><p>ব্যর্থ সেশন</p></div>
+        <div class="card"><h2>{{ stats.total_uploads }}</h2><p>মোট আপলোড করা সেশন</p></div>
+        <div class="card"><h2 style="color: #22c55e;">{{ stats.successful_bookings }}</h2><p>সফল প্রসেস</p></div>
+        <div class="card"><h2 style="color: #ef4444;">{{ stats.failed_bookings }}</h2><p>ব্যর্থ সেশন</p></div>
     </div>
+
     <h3>📋 লাইভ ফাইল ও সেশন ট্র্যাকিং লগ</h3>
     <table>
         <thead>
@@ -141,40 +162,20 @@
                 <th>বর্তমান অবস্থা</th>
             </tr>
         </thead>
-        <tbody id="log-table-body"></tbody>
+        <tbody>
+            {% for entry in stats.history | reverse %}
+            <tr>
+                <td>{{ entry.time }}</td>
+                <td>{{ entry.passport }}</td>
+                <td>{{ entry.center }}</td>
+                <td>{{ entry.filename }}</td>
+                <td><span style="padding:4px 8px; background:#065f46; color:#34d399; border-radius:4px; font-weight:bold;">{{ entry.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 <script>
     function togglePassword(inputId, iconElement) {
         const inputField = document.getElementById(inputId);
         if (inputField.type === "password") {
-            inputField.type = "text";
-            iconElement.innerText = "🔒";
-        } else {
-            inputField.type = "password";
-            iconElement.innerText = "👁️";
-        }
-    }
-
-    async function uploadGroupData() {
-        const ivac_phone = document.getElementById('ivac_phone').value;
-        const ivac_pass = document.getElementById('ivac_pass').value;
-        const center = document.getElementById('center').value;
-        const visa_type = document.getElementById('visa_type').value;
-
-        if(!ivac_phone || !ivac_pass) {
-            alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
-            return;
-        }
-
-        const file1Input = document.getElementById('file_1');
-        if(!file1Input.files || file1Input.files.length === 0) {
-            alert('মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('ivac_phone', ivac_phone);
-        formData.append('ivac_pass', ivac_pass);
-        formData.append('center', center);
-        formData.append('visa_type', visa_type);
