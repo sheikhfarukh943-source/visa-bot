@@ -39,7 +39,6 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
-# মূল হোম পেজ রিডাইরেক্ট লজিক
 @app.route("/")
 def home():
     if 'user_id' not in session: return redirect(url_for('login_page'))
@@ -58,13 +57,23 @@ def login_page():
         return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
     return render_template("login.html")
 
-# ১০০% ফিক্সড অ্যাডমিন রাউট: প্রতিবার পেজ লোড হওয়ার সময় ইউজার তালিকা এবং লাইভ ওটিপি লিস্ট ডাইরেক্ট পুশ হবে
+# ফিক্সড অ্যাডমিন রাউট: ডাটাবেজ লকিং ফ্রিতে রেন্ডার করার ফাইনাল মেথড
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
+    
+    # ডাটাবেজ থেকে সেভ থাকা সব ইউজারের নাম রিড করা
     all_users = User.query.all()
+    users_list = [{"username": u.username, "role": u.role} for u in all_users]
     live_list = list(active_sessions.values())
-    return render_template("admin.html", users=all_users, stats=admin_stats, live_sessions=live_list, admin_name=session.get('username'))
+    
+    return render_template(
+        "admin.html", 
+        users_list=users_list, 
+        stats=admin_stats, 
+        live_sessions=live_list, 
+        admin_name=session.get('username')
+    )
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
@@ -95,7 +104,6 @@ def pre_load_group():
     admin_stats["total_uploads"] += 1
     session_id = f"session_{ivac_phone}"
     
-    # ফাইল আপলোড হওয়ার সাথে সাথে ওটিপি উইজেট বক্স এবং লগের মেমরি স্থায়ীভাবে সক্রিয় করা হলো
     active_sessions[session_id] = {
         "id": session_id,
         "phone": ivac_phone,
