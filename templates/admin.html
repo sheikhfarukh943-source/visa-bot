@@ -136,7 +136,7 @@
             <tr>
                 <th>সময়</th>
                 <th>IVAC লগইন নম্বর</th>
-                <th>ভিসา সেন্টার</th>
+                <th>ভিসা সেন্টার</th>
                 <th>ভিসা টাইপ (ফাইল সংখ্যা)</th>
                 <th>বর্তমান অবস্থা</th>
             </tr>
@@ -179,4 +179,4 @@
         formData.append('center', center);
         formData.append('visa_type', visa_type);
         
-        // ফিক্সড: ফাইল লিস্টের বদলে সুনির্দিষ্ট ফাইল অবজেক্ট পাস করা হলো
+        // Fixed: Extracting the actual first file safely using array index [0]
