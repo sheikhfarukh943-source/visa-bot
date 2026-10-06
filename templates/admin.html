@@ -25,7 +25,6 @@
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         .toggle-password:hover { color: #38bdf8; }
         
-        /* বাটনগুলোর স্থায়ী ভিজিবল স্টাইল */
         .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; }
         .submit-btn:hover { background: #0369a1; }
         
@@ -64,12 +63,10 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- সার্ভার থেকে আসা নোটিফিকেশন মেসেজ (সফল বা ব্যর্থ) -->
-    {% if stats and stats.last_message %}
-        <div class="flash-message flash-success">{{ stats.last_message }}</div>
-    {% endif %}
+    <!-- সার্ভার ফিডব্যাক মেসেজ এরিয়া -->
+    <div id="flash-message-box" class="flash-message" style="display: none;"></div>
 
-    <!-- 🤖 ১. বটের লাইভ ওটিপি মনিটর জোন -->
+    <!-- 🤖 ১. আইভ্যাক সার্ভার হিট ও ওটিপি মনিটর উইজেট জোন -->
     <div class="live-bot-zone">
         <h3 style="color: #eab308; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 0;">🤖 আইভ্যাক সার্ভার হিট ও লাইভ ওটিপি মনিটর (Live Bot Engine)</h3>
         <div id="live-sessions-container">
@@ -78,19 +75,19 @@
     </div>
 
     <div class="section-grid">
-        <!-- ২. প্রিলোড ফর্ম প্যানেল (শতভাগ সচল নেটিভ সাবমিশন) -->
+        <!-- ২. প্রিলোড ফর্ম প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
-            <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
+            <form id="ivac-group-form" onsubmit="return false;">
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
-                        <input type="text" name="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
+                        <input type="text" id="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
                         <div class="password-container">
-                            <input type="password" id="ivac_pass" name="ivac_pass" placeholder="••••••••" required>
+                            <input type="password" id="ivac_pass" placeholder="••••••••" required>
                             <span class="toggle-password" onclick="togglePassword('ivac_pass', this)">👁️</span>
                         </div>
                     </div>
@@ -98,7 +95,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
-                        <select name="center">
+                        <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
                             <option value="Rajshahi">Rajshahi</option>
@@ -108,7 +105,7 @@
                     </div>
                     <div class="form-group">
                         <label>ভিসা টাইপ (Visa Type)</label>
-                        <select name="visa_type">
+                        <select id="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
@@ -119,40 +116,44 @@
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ১ (Primary Webfile)*</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_1" required></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_2"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_3"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_4"></div>
                     </div>
                 </div>
-                <button type="submit" class="submit-btn">👥 প্রিলোড শুরু করুন</button>
+                <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
         </div>
         
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (বাটন সম্পূর্ণ ফিক্সড করা হয়েছে) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (বাটন ও রোল শতভাগ ফিক্সড) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <form action="/admin/create-user" method="POST">
+            <form id="create-user-form" onsubmit="return false;">
                 <div class="form-group">
                     <label>নতুন ইউজারনেম</label>
-                    <input type="text" name="username" placeholder="Username" required>
+                    <input type="text" id="new-user" placeholder="Username" required>
                 </div>
                 <div class="form-group">
                     <label>পাসওয়ার্ড</label>
                     <div class="password-container">
-                        <input type="password" id="new-pass" name="password" placeholder="Password" required>
+                        <input type="password" id="new-pass" placeholder="Password" required>
                         <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>অ্যাকাউন্ট রোল</label>
-                    <select name="role">
+                    <select id="new-role">
+                        <option value="User">User (सहকারী)</option>
+                        <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
+                    </select>
+                </div>
