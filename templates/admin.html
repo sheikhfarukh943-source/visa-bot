@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - IVAC Custom Control Panel</title>
+    <title>SlotBuddy - IVAC Mobile Login Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -61,7 +61,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ভিসา সেন্টার</label>
+                        <label>ভিসা সেন্টার</label>
                         <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
@@ -71,7 +71,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>ভিসา টাইপ (Visa Type)</label>
+                        <label>ভিসা টাইপ (Visa Type)</label>
                         <select id="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
@@ -136,8 +136,8 @@
             <tr>
                 <th>সময়</th>
                 <th>IVAC লগইন নম্বর</th>
-                <th>ভিসา সেন্টার</th>
-                <th>ভিসา টাইপ (ফাইল সংখ্যা)</th>
+                <th>ভিসা সেন্টার</th>
+                <th>ভিসা টাইপ (ফাইল সংখ্যা)</th>
                 <th>বর্তমান অবস্থা</th>
             </tr>
         </thead>
@@ -163,7 +163,7 @@
         const visa_type = document.getElementById('visa_type').value;
 
         if(!ivac_phone || !ivac_pass) {
-            alert('दয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
+            alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
             return;
         }
 
@@ -178,56 +178,3 @@
         formData.append('ivac_pass', ivac_pass);
         formData.append('center', center);
         formData.append('visa_type', visa_type);
-        // এখানে সুনির্দিষ্টভাবে প্রকৃত প্রথম ফাইল অবজেক্টটি পাস করা হয়েছে
-formData.append('file_1', file1Input.files[0]);
-for (let i = 2; i <= 4; i++) {
-const fileInputObj = document.getElementById('file_' + i);
-if (fileInputObj && fileInputObj.files && fileInputObj.files.length > 0) {
-formData.append('file_' + i, fileInputObj.files[0]);
-}
-}
-showBotLog('⏳ তথ্য ও ওয়েব ফাইল প্রিলোড হচ্ছে...', '#1e3a8a', '#60a5fa');
-try {
-let res = await fetch('/pre-load-group', { method: 'POST', body: formData });
-let data = await res.json();
-if(data.status === 'queued') {
-showBotLog('🟢 তথ্য ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।', '#065f46', '#34d399');
-refreshAdminStats();
-} else {
-showBotLog('❌ ত্রুটি: ' + data.message, '#991b1b', '#f87171');
-}
-} catch (error) {
-showBotLog('❌ নেটওয়ার্ক ত্রুটি! সার্ভার রেসপন্স করছে না।', '#991b1b', '#f87171');
-}
-}
-async function createUserAccount() {
-const username = document.getElementById('new-user').value;
-const password = document.getElementById('new-pass').value;
-const role = document.getElementById('new-role').value;
-if(!username || !password) { alert('সব তথ্য দিন'); return; }
-try {
-let res = await fetch('/admin/create-user', {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ username: username, password: password, role: role })
-});
-let data = await res.json();
-alert(data.message);
-if(res.ok) { document.getElementById('new-user').value = ''; document.getElementById('new-pass').value = ''; }
-} catch (error) { alert('ইউজার তৈরি করতে নেটওয়ার্ক সমস্যা হয়েছে।'); }
-}
-async function refreshAdminStats() {
-try {
-let response = await fetch('/admin/stats');
-let data = await response.json();
-document.getElementById('total-uploads').innerText = data.total_uploads;
-let tableBody = document.getElementById('log-table-body');
-tableBody.innerHTML = '';
-data.history.reverse().forEach(entry => {
-let row = <tr><td>${entry.time}</td><td>${entry.passport}</td><td>${entry.center}</td><td>${entry.filename}</td><td><span style="padding:4px 8px; background:#065f46; color:#34d399; border-radius:4px; font-weight:bold;">${entry.status}</span></td></tr>;
-tableBody.innerHTML += row;
-});
-} catch (error) {}
-}
-setInterval(refreshAdminStats, 4000);
-window.onload = refreshAdminStats;
