@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -13,15 +13,8 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = 'uploaded_files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# সেশন এবং আপলোড লগ ডাটা ব্যাকএন্ডে স্থায়ী ও স্ট্যাটিক রাখা হলো
-admin_stats = {
-    "total_uploads": 0, 
-    "successful_bookings": 0, 
-    "failed_bookings": 0, 
-    "history": [], 
-    "last_message": None,
-    "live_sessions": [] # ফ্রন্টএন্ড পোলিংয়ের জন্য মেমরিতে ফিক্সড লিস্ট
-}
+active_sessions = {}
+admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,11 +59,11 @@ def login_page():
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    return render_template("admin.html", users=User.query.all(), stats=admin_stats, admin_name=session.get('username'))
+    return render_template("admin.html")
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
-    if 'user_id' not in session: return redirect(url_for('login_page'))
+    if 'user_id' not in session: return jsonify({"status": "error", "message": "লগইন করা আবশ্যক"}), 401
     
     center = request.form.get("center")
     visa_type = request.form.get("visa_type")
@@ -78,32 +71,31 @@ def pre_load_group():
     ivac_pass = request.form.get("ivac_pass")
     
     if not ivac_phone or not ivac_pass:
-        admin_stats["last_message"] = "❌ IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"
-        return redirect(url_for('admin_dashboard'))
+        return jsonify({"status": "error", "message": "IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"})
+
+    # নিরাপদ ফাইল চেকিং মেকানিজম
+    file_obj = request.files.get("file_1")
+    if not file_obj or file_obj.filename == '':
+        return jsonify({"status": "error", "message": "মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।"})
 
     uploaded_count = 0
     for i in range(1, 5):
-        file_obj = request.files.get(f"file_{i}")
-        if i == 1 and not file_obj:
-            admin_stats["last_message"] = "❌ মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।"
-            return redirect(url_for('admin_dashboard'))
-            
-        if file_obj and file_obj.filename != '':
-            filename = f"{ivac_phone}_member_{i}_{file_obj.filename}"
-            file_obj.save(os.path.join(UPLOAD_FOLDER, filename))
+        f_obj = request.files.get(f"file_{i}")
+        if f_obj and f_obj.filename != '':
+            filename = f"{ivac_phone}_member_{i}_{f_obj.filename}"
+            f_obj.save(os.path.join(UPLOAD_FOLDER, filename))
             uploaded_count += 1
 
     admin_stats["total_uploads"] += 1
     session_id = f"session_{ivac_phone}_{int(datetime.now().timestamp())}"
     
-    # ফাইল আপলোড হওয়ার সাথে সাথে ওটিপি উইজেট লাইভ অন করার জন্য স্ট্যাটিক সেশন এন্ট্রি
-    admin_stats["live_sessions"] = [{
+    active_sessions[session_id] = {
         "id": session_id,
         "phone": ivac_phone,
         "center": center,
         "visa_type": visa_type,
-        "status": "waiting_for_otp" # ওটিপি বক্স সবসময় ফিক্সড স্ক্রিনে দেখাবে
-    }]
+        "status": "waiting_for_otp"
+    }
 
     admin_stats["history"].append({
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -113,43 +105,50 @@ def pre_load_group():
         "status": "Processed"
     })
     
-    admin_stats["last_message"] = "🟢 তথ্য ও ওয়েব ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।"
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({"status": "queued", "session_id": session_id})
 
 @app.route("/api/live-sessions", methods=["GET"])
 def get_live_sessions():
-    return jsonify(admin_stats["live_sessions"])
+    return jsonify(list(active_sessions.values()))
 
 @app.route("/api/submit-otp", methods=["POST"])
 def api_submit_otp():
     data = request.json
     s_id = data.get("session_id")
-    otp = data.get("otp")
-    
-    if admin_stats["live_sessions"] and admin_stats["live_sessions"][0]["id"] == s_id:
-        admin_stats["live_sessions"][0]["status"] = "slot_booking_in_progress"
-        return jsonify({"status": "success", "message": f"ওটিপি কোড [{otp}] সফলভাবে সাবমিট হয়েছে! স্লট বুকিং চেক করা হচ্ছে..."})
-    return jsonify({"status": "error", "message": "কোনো সক্রিয় সেশন খুঁজে পাওয়া যায়নি। "})
+    if s_id in active_sessions:
+        active_sessions[s_id]["status"] = "slot_booking_in_progress"
+        return jsonify({"status": "success", "message": "ওটিপি বটের কাছে পাঠানো হয়েছে। স্লট বুকিং চেক করা হচ্ছে..."})
+    return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই। "})
 
 @app.route("/admin/create-user", methods=["POST"])
 def create_user():
-    if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    
-    username = request.form.get("username")
-    password = request.form.get("password")
-    role = request.form.get("role")
+    if 'user_id' not in session or session.get('role') != 'Admin': return jsonify({"status": "error", "message": "অনুমতি নেই"}), 403
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
     
     if User.query.filter_by(username=username).first(): 
-        admin_stats["last_message"] = "❌ ইউজারনেম ইতিমধ্যে বিদ্যমান।"
-        return redirect(url_for('admin_dashboard'))
+        return jsonify({"status": "error", "message": "ইউজারনেম ইতিমধ্যে বিদ্যমান।"})
         
     new_user = User(username=username, role=role)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    
-    admin_stats["last_message"] = f"🟢 নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে।"
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({"status": "success", "message": f"নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে। "})
+
+@app.route("/admin/stats", methods=["GET"])
+def get_admin_stats():
+    # ডাটাবেজ থেকে লাইভ ইউজারদের তালিকা রিড করার মেথড
+    users = User.query.all()
+    users_data = [{"username": u.username, "role": u.role} for u in users]
+    return jsonify({
+        "total_uploads": admin_stats["total_uploads"],
+        "successful_bookings": admin_stats["successful_bookings"],
+        "failed_bookings": admin_stats["failed_bookings"],
+        "history": admin_stats["history"],
+        "users_list": users_data
+    })
 
 @app.route("/logout")
 def logout():
