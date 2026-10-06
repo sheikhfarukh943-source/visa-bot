@@ -46,12 +46,10 @@
     </div>
     
     <div class="section-grid">
-        <!-- মোবাইল নম্বর ভিত্তিক প্রিলোড প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form id="ivac-group-form" enctype="multipart/form-data">
                 
-                <!-- IVAC মোবাইল ও পাসওয়ার্ড ক্রেডেন্সিয়ালস -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
@@ -63,7 +61,6 @@
                     </div>
                 </div>
 
-                <!-- সেন্টার ও ভিসা টাইপ সেকশন -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
@@ -86,7 +83,6 @@
                     </div>
                 </div>
 
-                <!-- ফাইল আপলোড অপশন -->
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row" style="border-color: #38bdf8;">
                         <span class="member-title" style="color: #38bdf8;">📄 মেম্বার ১ (Primary Webfile)*</span>
@@ -160,6 +156,7 @@
         showBotLog('⏳ তথ্য ও ওয়েব ফাইল প্রিলোড হচ্ছে...', '#1e3a8a', '#60a5fa');
 
         try {
+            // রাউট হুবহু '/pre-load-group' সেট করা হয়েছে
             let res = await fetch('/pre-load-group', { method: 'POST', body: formData });
             let data = await res.json();
             
@@ -198,3 +195,6 @@
             let tableBody = document.getElementById('log-table-body');
             tableBody.innerHTML = '';
             data.history.reverse().forEach(entry => {
+                let row = `<tr>
+                    <td>${entry.time}</td>
+                    <td>${entry.passport}</td>
