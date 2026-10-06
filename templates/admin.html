@@ -16,10 +16,18 @@
         
         .form-group { margin-bottom: 12px; }
         .form-row { display: flex; gap: 15px; margin-bottom: 12px; }
-        .form-row .form-group { flex: 1; margin-bottom: 0; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; position: relative; }
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
+        
+        /* পাসওয়ার্ড শো/হাইড বাটনের নতুন স্টাইল */
+        .password-wrapper { position: relative; display: flex; align-items: center; }
+        .password-wrapper input { padding-right: 40px; }
+        .toggle-password { position: absolute; right: 10px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; }
+        .toggle-password:hover { color: #38bdf8; }
+
+        button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
+        button.submit-btn:hover { background: #0369a1; }
         
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .member-title { font-size: 14px; color: #38bdf8; font-weight: bold; }
@@ -46,25 +54,30 @@
     </div>
     
     <div class="section-grid">
+        <!-- মাল্টি-ফাইল বুকিং প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
-            <form id="ivac-group-form" enctype="multipart/form-data">
+            <form id="ivac-group-form" onsubmit="return false;">
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
-                        <input type="text" name="ivac_phone" id="ivac_phone" placeholder="उदा. 01XXXXXXXXX" required>
+                        <input type="text" id="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
-                        <input type="password" name="ivac_pass" id="ivac_pass" placeholder="••••••••" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="ivac_pass" placeholder="••••••••" required>
+                            <!-- পাসওয়ার্ড দেখার জন্য চোখের আইকন বোতাম -->
+                            <span class="toggle-password" onclick="togglePasswordVisibility('ivac_pass', this)">👁️</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
-                        <select name="center" id="center">
+                        <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
                             <option value="Rajshahi">Rajshahi</option>
@@ -74,7 +87,7 @@
                     </div>
                     <div class="form-group">
                         <label>ভিসা টাইপ (Visa Type)</label>
-                        <select name="visa_type" id="visa_type">
+                        <select id="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
@@ -86,23 +99,23 @@
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row" style="border-color: #38bdf8;">
                         <span class="member-title" style="color: #38bdf8;">📄 মেম্বার ১ (Primary Webfile)*</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_1" required></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_2"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_3"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_4"></div>
                     </div>
                 </div>
 
-                <button type="button" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
+                <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
             <div id="bot-log-box"></div>
         </div>
@@ -115,7 +128,10 @@
             </div>
             <div class="form-group">
                 <label>পাসওয়ার্ড</label>
-                <input type="password" id="new-pass">
+                <div class="password-wrapper">
+                    <input type="password" id="new-pass">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('new-pass', this)">👁️</span>
+                </div>
             </div>
             <div class="form-group">
                 <label>অ্যাকাউন্ট রোল</label>
@@ -124,7 +140,7 @@
                     <option value="User">সহকারী ব্যবহারকারী (User)</option>
                 </select>
             </div>
-            <button type="button" onclick="createUserAccount()" style="background: #22c55e;">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+            <button type="button" class="submit-btn" style="background: #22c55e;" onclick="createUserAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
         </div>
     </div>
     
@@ -150,51 +166,24 @@
 </div>
 
 <script>
-    async function uploadGroupData() {
-        const form = document.getElementById('ivac-group-form');
-        const formData = new FormData(form);
-        showBotLog('⏳ তথ্য ও ওয়েব ফাইল প্রিলোড হচ্ছে...', '#1e3a8a', '#60a5fa');
-
-        try {
-            // রাউট হুবহু '/pre-load-group' সেট করা হয়েছে
-            let res = await fetch('/pre-load-group', { method: 'POST', body: formData });
-            let data = await res.json();
-            
-            if(data.status === 'queued') {
-                showBotLog('🟢 তথ্য ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।', '#065f46', '#34d399');
-                refreshAdminStats();
-            } else {
-                showBotLog('❌ ত্রুটি: ' + data.message, '#991b1b', '#f87171');
-            }
-        } catch (error) {
-            showBotLog('❌ নেটওয়ার্ক ত্রুটি! সার্ভার রেসপন্স করছে না।', '#991b1b', '#f87171');
+    // পাসওয়ার্ড দেখা এবং লুকানোর মূল লজিক ফাংশন
+    function togglePasswordVisibility(inputId, iconElement) {
+        const passwordInput = document.getElementById(inputId);
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            iconElement.innerText = "🔒"; // পাসওয়ার্ড দেখতে পেলে লক আইকন দেখাবে
+        } else {
+            passwordInput.type = "password";
+            iconElement.innerText = "👁️"; // পাসওয়ার্ড লুকানো থাকলে চোখের আইকন দেখাবে
         }
     }
 
-    async function createUserAccount() {
-        const username = document.getElementById('new-user').value;
-        const password = document.getElementById('new-pass').value;
-        const role = document.getElementById('new-role').value;
-        if(!username || !password) return alert('সব তথ্য দিন');
+    async function uploadGroupData() {
+        const ivac_phone = document.getElementById('ivac_phone').value;
+        const ivac_pass = document.getElementById('ivac_pass').value;
+        const center = document.getElementById('center').value;
+        const visa_type = document.getElementById('visa_type').value;
 
-        let res = await fetch('/admin/create-user', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, password, role })
-        });
-        let data = await res.json();
-        alert(data.message);
-    }
-
-    async function refreshAdminStats() {
-        try {
-            let response = await fetch('/admin/stats');
-            let data = await response.json();
-            document.getElementById('total-uploads').innerText = data.total_uploads;
-            
-            let tableBody = document.getElementById('log-table-body');
-            tableBody.innerHTML = '';
-            data.history.reverse().forEach(entry => {
-                let row = `<tr>
-                    <td>${entry.time}</td>
-                    <td>${entry.passport}</td>
+        if(!ivac_phone || !ivac_pass) {
+            return alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
+        }
