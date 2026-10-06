@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - IVAC Custom Control Panel</title>
+    <title>SlotBuddy - IVAC Mobile Login Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -20,10 +20,9 @@
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
         
-        /* পাসওয়ার্ড শো/হাইড বাটন পজিশন ফিক্স */
         .password-container { position: relative; display: flex; align-items: center; width: 100%; }
         .password-container input { padding-right: 45px; width: 100%; }
-        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; background: transparent; border: none; padding: 0; }
+        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         .toggle-password:hover { color: #38bdf8; }
 
         button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
@@ -176,7 +175,7 @@
     }
 
     async function uploadGroupData() {
-        const ivac_phone = document.getElementById('ivac_phone').value;
+        const ivac_phone = document.getElementById('iac_phone') ? document.getElementById('iac_phone').value : document.getElementById('ivac_phone').value;
         const ivac_pass = document.getElementById('ivac_pass').value;
         const center = document.getElementById('center').value;
         const visa_type = document.getElementById('visa_type').value;
