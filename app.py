@@ -30,6 +30,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 with app.app_context():
+    db.drop_all()  # পুরনো জ্যাম লাগা ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ করা হলো
     db.create_all()
     if not User.query.filter_by(username="admin_farukh").first():
         admin = User(username="admin_farukh", role="Admin")
@@ -73,6 +74,7 @@ def pre_load_group():
         return jsonify({"status": "error", "message": "IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"}), 400
 
     uploaded_count = 0
+    # ফ্রন্টএন্ড জাভাস্ক্রিপ্ট ম্যাপড ফাইল ডাটা পার্সিং লুপ
     for i in range(1, 5):
         file_obj = request.files.get(f"file_{i}")
         if i == 1 and not file_obj:
@@ -104,9 +106,7 @@ def create_user():
     password = data.get("password")
     role = data.get("role")
     
-    if User.query.filter_by(username=username).first(): 
-        return jsonify({"status": "error", "message": "বিদ্যমান।"}), 400
-        
+    if User.query.filter_by(username=username).first(): return jsonify({"status": "error", "message": "বিদ্যমান।"}), 400
     new_user = User(username=username, role=role)
     new_user.set_password(password)
     db.session.add(new_user)
@@ -114,8 +114,7 @@ def create_user():
     return jsonify({"status": "success", "message": "তৈরি হয়েছে।"})
 
 @app.route("/admin/stats", methods=["GET"])
-def get_admin_stats(): 
-    return jsonify(admin_stats)
+def get_admin_stats(): return jsonify(admin_stats)
 
 @app.route("/logout")
 def logout():
