@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - IVAC Mobile Login Control Panel</title>
+    <title>SlotBuddy - IVAC Custom Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -20,10 +20,10 @@
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
         
-        /* পাসওয়ার্ড শো/হাইড বাটনের পজিশন ও স্টাইল */
-        .password-container { position: relative; display: flex; align-items: center; }
+        /* পাসওয়ার্ড শো/হাইড বাটন পজিশন ফিক্স */
+        .password-container { position: relative; display: flex; align-items: center; width: 100%; }
         .password-container input { padding-right: 45px; width: 100%; }
-        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 999; }
+        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; background: transparent; border: none; padding: 0; }
         .toggle-password:hover { color: #38bdf8; }
 
         button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
@@ -74,7 +74,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ভিসา সেন্টার</label>
+                        <label>ভিসা সেন্টার</label>
                         <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
@@ -164,7 +164,6 @@
 </div>
 
 <script>
-    // পাসওয়ার্ড ভিউ পরিবর্তন করার নিখুঁত মেথড
     function togglePassword(inputId, iconElement) {
         const inputField = document.getElementById(inputId);
         if (inputField.type === "password") {
@@ -176,7 +175,6 @@
         }
     }
 
-    // ফাইল এবং তথ্য সফলভাবে সাবমিট করার বিশুদ্ধ ফাংশন
     async function uploadGroupData() {
         const ivac_phone = document.getElementById('ivac_phone').value;
         const ivac_pass = document.getElementById('ivac_pass').value;
@@ -184,8 +182,15 @@
         const visa_type = document.getElementById('visa_type').value;
 
         if(!ivac_phone || !ivac_pass) {
-            return alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
+            alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
+            return;
         }
 
         const file1Input = document.getElementById('file_1');
         if(!file1Input.files || file1Input.files.length === 0) {
+            alert('মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('ivac_phone', ivac_phone);
