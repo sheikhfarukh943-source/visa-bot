@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -13,6 +13,7 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = 'uploaded_files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Central session and upload logs saved in-memory
 admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
 
 class User(db.Model):
@@ -30,7 +31,6 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 with app.app_context():
-    db.drop_all()  # পুরনো জ্যাম লাগা ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ করা হলো
     db.create_all()
     if not User.query.filter_by(username="admin_farukh").first():
         admin = User(username="admin_farukh", role="Admin")
@@ -59,11 +59,11 @@ def login_page():
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    return render_template("admin.html", users=User.query.all(), admin_name=session.get('username'))
+    return render_template("admin.html", users=User.query.all(), stats=admin_stats, admin_name=session.get('username'))
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
-    if 'user_id' not in session: return jsonify({"status": "error", "message": "লগইন করা আবশ্যক"}), 401
+    if 'user_id' not in session: return redirect(url_for('login_page'))
     
     center = request.form.get("center")
     visa_type = request.form.get("visa_type")
@@ -71,50 +71,56 @@ def pre_load_group():
     ivac_pass = request.form.get("ivac_pass")
     
     if not ivac_phone or not ivac_pass:
-        return jsonify({"status": "error", "message": "IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"}), 400
+        flash("❌ IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।", "error")
+        return redirect(url_for('admin_dashboard'))
 
     uploaded_count = 0
-    # ফ্রন্টএন্ড জাভাস্ক্রিপ্ট ম্যাপড ফাইল ডাটা পার্সিং লুপ
     for i in range(1, 5):
         file_obj = request.files.get(f"file_{i}")
-        if i == 1 and not file_obj:
-            return jsonify({"status": "error", "message": "মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।"}), 400
+        if i == 1 and (not file_obj or file_obj.filename == ''):
+            flash("❌ মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।", "error")
+            return redirect(url_for('admin_dashboard'))
             
         if file_obj and file_obj.filename != '':
             filename = f"{ivac_phone}_member_{i}_{file_obj.filename}"
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            file_obj.save(file_path)
+            file_obj.save(os.path.join(UPLOAD_FOLDER, filename))
             uploaded_count += 1
 
     admin_stats["total_uploads"] += 1
-    log_entry = {
+    admin_stats["history"].append({
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "passport": ivac_phone,
         "center": center,
         "filename": f"{visa_type} ({uploaded_count} Files)",
         "status": "Processed"
-    }
-    admin_stats["history"].append(log_entry)
+    })
     
-    return jsonify({"status": "queued", "session_id": ivac_phone, "message": "সফলভাবে প্রিলোড হয়েছে।"})
+    flash("🟢 তথ্য ও ওয়েব ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।", "success")
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/admin/create-user", methods=["POST"])
 def create_user():
-    if 'user_id' not in session or session.get('role') != 'Admin': return jsonify({"status": "error", "message": "অনুমতি নেই"}), 403
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-    role = data.get("role")
+    if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
     
-    if User.query.filter_by(username=username).first(): return jsonify({"status": "error", "message": "বিদ্যমান।"}), 400
+    username = request.form.get("username")
+    password = request.form.get("password")
+    role = request.form.get("role")
+    
+    if not username or not password:
+        flash("❌ সব তথ্য দিন।", "error")
+        return redirect(url_for('admin_dashboard'))
+
+    if User.query.filter_by(username=username).first(): 
+        flash("❌ ইউজারনেম ইতিমধ্যে বিদ্যমান।", "error")
+        return redirect(url_for('admin_dashboard'))
+        
     new_user = User(username=username, role=role)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"status": "success", "message": "তৈরি হয়েছে।"})
-
-@app.route("/admin/stats", methods=["GET"])
-def get_admin_stats(): return jsonify(admin_stats)
+    
+    flash(f"🟢 নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে।", "success")
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/logout")
 def logout():
