@@ -23,8 +23,10 @@
         .password-container { position: relative; display: flex; align-items: center; width: 100%; }
         .password-container input { padding-right: 45px; width: 100%; }
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
+        .toggle-password:hover { color: #38bdf8; }
         
-        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; }
+        /* বাটনের স্থায়ী স্টাইল নিশ্চিত করা হলো */
+        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; text-decoration: none; }
         .submit-btn:hover { background: #0369a1; }
         
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -41,8 +43,6 @@
         th { background: #334155; color: #38bdf8; }
         
         .flash-message { padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; }
-        .flash-success { background: #065f46; color: #34d399; border: 1px solid #34d399; }
-        
         .live-bot-zone { background: #111827; border: 2px dashed #eab308; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
         .live-session-card { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
@@ -61,9 +61,9 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- সার্ভার থেকে আসা নোটিফিকেশন ব্যানার -->
+    <!-- নোটিফিকেশন ব্যানার এরিয়া -->
     {% if stats and stats.last_message %}
-        <div class="flash-message flash-success">{{ stats.last_message }}</div>
+        <div class="flash-message" style="background: #065f46; color: #34d399; border: 1px solid #34d399;">{{ stats.last_message }}</div>
     {% endif %}
 
     <!-- 🤖 ১. আইভ্যাক সার্ভার হিট ও ওটিপি মনিটর উইজেট জোন -->
@@ -75,7 +75,7 @@
     </div>
 
     <div class="section-grid">
-        <!-- ২. প্রিলোড ফর্ম প্যানেল (পিওর নেটিভ ব্রাউজার অ্যাকশন সাবমিশন) -->
+        <!-- ২. প্রিলোড ফর্ম প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
@@ -135,7 +135,7 @@
             </form>
         </div>
         
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (পিওর নেটিভ ব্রাউজার অ্যাকশন সাবমিশন) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (পিওর নেটিভ ফর্ম সাবমিশন, বাটন কখনোই হারাবে না) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
             <form action="/admin/create-user" method="POST">
@@ -153,7 +153,4 @@
                 <div class="form-group">
                     <label>অ্যাকাউন্ট রোল</label>
                     <select name="role">
-                        <option value="User">User (সহকারী)</option>
-                        <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
-                    </select>
-                </div>
+                        <option value="User">User (सहকারী)</option>
