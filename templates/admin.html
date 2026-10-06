@@ -24,7 +24,7 @@
         .password-container input { padding-right: 45px; width: 100%; }
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         
-        /* বাটনের স্থায়ী স্টাইল নিশ্চিত করা হলো */
+        /* বাটনগুলোর চিরস্থায়ী নেটিভ ওপেন লেআউট স্টাইল */
         .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; text-decoration: none; }
         .submit-btn:hover { background: #0369a1; }
         .green-btn { background: #22c55e !important; color: white; }
@@ -67,11 +67,35 @@
         <div class="flash-message" style="background: #065f46; color: #34d399; border: 1px solid #34d399;">{{ stats.last_message }}</div>
     {% endif %}
 
-    <!-- 🤖 ১. আইভ্যাক ওটিপি মনিটর উইজেট জোন -->
+    <!-- 🤖 ১. ওটিপি মনিটর এবং ওটিপি ইনপুট জোন (নেটিভ সার্ভার সাইড জেনারেটেড) -->
     <div class="live-bot-zone">
         <h3 style="color: #eab308; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 0;">🤖 আইভ্যাক সার্ভার হিট ও লাইভ ওটিপি মনিটর (Live Bot Engine)</h3>
         <div id="live-sessions-container">
-            <p style="color: #94a3b8; font-size: 14px; text-align: center; margin: 10px 0;">কোনো সেশন বর্তমানে আইভ্যাক সার্ভারে হিট করছে না। নিচে ফাইল প্রিলোড করুন।</p>
+            {% if live_sessions %}
+                {% for s in live_sessions %}
+                <div class="live-session-card">
+                    <div>
+                        <span style="font-size:14px; font-weight:bold; color:#38bdf8;">📱 নম্বর: {{ s.phone }}</span> | 
+                        <span style="font-size:13px; color:#94a3b8;">📍 সেন্টার: {{ s.center }} [{{ s.visa_type }}]</span>
+                        
+                        {% if s.status == 'waiting_for_otp' %}
+                        <div class="otp-input-inline">
+                            <input type="text" id="otp_code_{{ s.id }}" maxlength="6" placeholder="XXXXXX">
+                            <button onclick="sendOtpToBot('{{ s.id }}')">ওটিপি সাবমিট</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span class="status-badge state-{{ s.status }}">
+                            {% if s.status == 'waiting_for_otp' %}🔑 ওটিপি পাঠানো হয়েছে! দ্রুত কোডটি বসান{% endif %}
+                            {% if s.status == 'slot_booking_in_progress' %}⏳ ফাইল আপলোড ও স্লট বুকিং করা হচ্ছে...{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #94a3b8; font-size: 14px; text-align: center; margin: 10px 0;">কোনো সেশন বর্তমানে আইভ্যাক সার্ভারে হিট করছে না। নিচে ফাইল প্রিলোড করুন।</p>
+            {% endif %}
         </div>
     </div>
 
@@ -128,31 +152,3 @@
                         <div class="file-input-wrapper"><input type="file" name="file_3"></div>
                     </div>
                     <div class="member-upload-row">
-                        <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
-                    </div>
-                </div>
-                <button type="submit" class="submit-btn">👥 প্রিলোড শুরু করুন</button>
-            </form>
-        </div>
-        
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (পিওর নেটিভ ফর্ম সাবমিশন, বাটন কখনোই হারাবে না) -->
-        <div class="box">
-            <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <form action="/admin/create-user" method="POST">
-                <div class="form-group">
-                    <label>নতুন ইউজারনেম</label>
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <label>পাসওয়ার্ড</label>
-                    <div class="password-container">
-                        <input type="password" id="new-pass" name="password" placeholder="Password" required>
-                        <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>অ্যাকাউন্ট রোল</label>
-                    <select name="role">
-                        <option value="User">User </option>
-                        <option value="Admin">Admin </option>
