@@ -77,6 +77,7 @@
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
                             <option value="Student">Student Visa</option>
+                            <option value="Student">Double Entry Visa</option>
                         </select>
                     </div>
                 </div>
@@ -118,8 +119,8 @@
             <div class="form-group">
                 <label>অ্যাকাউন্ট রোল</label>
                 <select id="new-role">
-                    <option value="Admin">অ্যাডমিন (Admin)</option>
-                    <option value="User">সহকারী ব্যবহারকারী (User)</option>
+                    <option value="Admin">Admin</option>
+                    <option value="User">User</option>
                 </select>
             </div>
             <button type="button" class="submit-btn" style="background: #22c55e;" onclick="createUserAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
@@ -155,18 +156,26 @@
             iconElement.innerText = "👁️";
         }
     }
+
     async function uploadGroupData() {
         const ivac_phone = document.getElementById('ivac_phone').value;
         const ivac_pass = document.getElementById('ivac_pass').value;
         const center = document.getElementById('center').value;
         const visa_type = document.getElementById('visa_type').value;
-        if(!ivac_phone || !ivac_pass) { alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।'); return; }
+
+        if(!ivac_phone || !ivac_pass) {
+            alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
+            return;
+        }
+
         const file1Input = document.getElementById('file_1');
-        if(!file1Input.files || file1Input.files.length === 0) { alert('মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।'); return; }
+        if(!file1Input.files || file1Input.files.length === 0) {
+            alert('মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('ivac_phone', ivac_phone);
         formData.append('ivac_pass', ivac_pass);
         formData.append('center', center);
         formData.append('visa_type', visa_type);
-        formData.append('file_1', file1Input.files[0]);
-        for (let i = 2; i <= 4; i++) {
