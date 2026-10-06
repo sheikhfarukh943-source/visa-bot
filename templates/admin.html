@@ -6,7 +6,7 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
-        h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-top: 0; }
+        <h1> { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-top: 0; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logout-btn { padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
         
@@ -14,16 +14,16 @@
         .box { flex: 1; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
         h3 { margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; }
         
-        .form-group { margin-bottom: 12px; }
+        .form-group { margin-bottom: 12px; position: relative; }
         .form-row { display: flex; gap: 15px; margin-bottom: 12px; }
-        .form-row .form-group { flex: 1; margin-bottom: 0; position: relative; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
         
-        /* পাসওয়ার্ড শো/হাইড বাটনের নতুন স্টাইল */
-        .password-wrapper { position: relative; display: flex; align-items: center; }
-        .password-wrapper input { padding-right: 40px; }
-        .toggle-password { position: absolute; right: 10px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; }
+        /* পাসওয়ার্ড শো/হাইড বাটনের সুনির্দিষ্ট পজিশন */
+        .password-container { position: relative; display: flex; align-items: center; }
+        .password-container input { padding-right: 45px; width: 100%; }
+        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 10; }
         .toggle-password:hover { color: #38bdf8; }
 
         button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
@@ -54,7 +54,6 @@
     </div>
     
     <div class="section-grid">
-        <!-- মাল্টি-ফাইল বুকিং প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form id="ivac-group-form" onsubmit="return false;">
@@ -66,10 +65,9 @@
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
-                        <div class="password-wrapper">
+                        <div class="password-container">
                             <input type="password" id="ivac_pass" placeholder="••••••••" required>
-                            <!-- পাসওয়ার্ড দেখার জন্য চোখের আইকন বোতাম -->
-                            <span class="toggle-password" onclick="togglePasswordVisibility('ivac_pass', this)">👁️</span>
+                            <span class="toggle-password" onclick="togglePassword('ivac_pass', this)">👁️</span>
                         </div>
                     </div>
                 </div>
@@ -128,9 +126,9 @@
             </div>
             <div class="form-group">
                 <label>পাসওয়ার্ড</label>
-                <div class="password-wrapper">
+                <div class="password-container">
                     <input type="password" id="new-pass">
-                    <span class="toggle-password" onclick="togglePasswordVisibility('new-pass', this)">👁️</span>
+                    <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                 </div>
             </div>
             <div class="form-group">
@@ -166,15 +164,15 @@
 </div>
 
 <script>
-    // পাসওয়ার্ড দেখা এবং লুকানোর মূল লজিক ফাংশন
-    function togglePasswordVisibility(inputId, iconElement) {
-        const passwordInput = document.getElementById(inputId);
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            iconElement.innerText = "🔒"; // পাসওয়ার্ড দেখতে পেলে লক আইকন দেখাবে
+    // পাসওয়ার্ড শো/হাইড করার বিশুদ্ধ ও সচল লজিক
+    function togglePassword(inputId, iconElement) {
+        const inputField = document.getElementById(inputId);
+        if (inputField.type === "password") {
+            inputField.type = "text";
+            iconElement.innerText = "🔒";
         } else {
-            passwordInput.type = "password";
-            iconElement.innerText = "👁️"; // পাসওয়ার্ড লুকানো থাকলে চোখের আইকন দেখাবে
+            inputField.type = "password";
+            iconElement.innerText = "👁️";
         }
     }
 
@@ -187,3 +185,10 @@
         if(!ivac_phone || !ivac_pass) {
             return alert('দয়া করে IVAC লগইন নম্বর এবং পাসওয়ার্ড ইনপুট দিন।');
         }
+
+        const file1Input = document.getElementById('file_1');
+        if(!file1Input.files || file1Input.files.length === 0) {
+            return alert('মেম্বার ১ (Primary Webfile) আপলোড করা বাধ্যতামূলক।');
+        }
+
+        const formData = new FormData();
