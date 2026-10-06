@@ -5,7 +5,7 @@
     <title>SlotBuddy - IVAC Advanced Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
-        .dashboard { max-width: 1300px; margin: 0 auto; }
+        .dashboard { max-width: 1200px; margin: 0 auto; }
         h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-top: 0; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logout-btn { padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
@@ -23,12 +23,13 @@
         .password-container { position: relative; display: flex; align-items: center; width: 100%; }
         .password-container input { padding-right: 45px; width: 100%; }
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
+        .toggle-password:hover { color: #38bdf8; }
         
         button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
         button.submit-btn:hover { background: #0369a1; }
-        
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .member-title { font-size: 14px; color: #38bdf8; font-weight: bold; }
+        .file-input-wrapper { width: 60%; }
         
         .metrics { display: flex; gap: 20px; margin-bottom: 30px; }
         .card { flex: 1; background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; text-align: center; }
@@ -43,17 +44,18 @@
         .flash-success { background: #065f46; color: #34d399; border: 1px solid #34d399; }
         .flash-error { background: #991b1b; color: #f87171; border: 1px solid #f87171; }
         
-        /* লাইভ ওটিপি এবং বটের কাস্টম ট্র্যাকিং জোন স্টাইল */
         .live-bot-zone { background: #111827; border: 2px dashed #eab308; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
         .live-session-card { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
         .state-waiting_for_otp { background: #854d0e; color: #fef08a; animation: pulse 1.5s infinite; }
         .state-slot_booking_in_progress { background: #1e3a8a; color: #60a5fa; }
         .state-processing_fields { background: #1e293b; color: #94a3b8; }
+        .state-server_waiting { background: #334155; color: #cbd5e1; }
+        .state-completed { background: #065f46; color: #34d399; }
         
-        .otp-input-inline { display: flex; gap: 10px; margin-top: 5px; }
-        .otp-input-inline input { width: 120px; text-align: center; font-size: 16px; letter-spacing: 2px; }
-        .otp-input-inline button { padding: 8px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
+        .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
+        .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
@@ -73,7 +75,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- 🤖 ১. বটের লাইভ স্ট্যাটাস ট্র্যাকিং এবং ওটিপি (OTP) বসানোর উইজেট জোন -->
+    <!-- 🤖 ১. বটের লাইভ স্ট্যাটাস ট্র্যাকিং এবং ওটিপি (OTP) জোন -->
     <div class="live-bot-zone">
         <h3 style="color: #eab308; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 0;">🤖 আইভ্যাক সার্ভার হিট ও লাইভ ওটিপি মনিটর (Live Bot Engine)</h3>
         <div id="live-sessions-container">
@@ -84,16 +86,16 @@
     <div class="section-grid">
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
-            <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
+            <form id="ivac-group-form" onsubmit="return false;">
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
-                        <input type="text" name="ivac_phone" required>
+                        <input type="text" id="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
                         <div class="password-container">
-                            <input type="password" id="ivac_pass" name="ivac_pass" required>
+                            <input type="password" id="ivac_pass" placeholder="••••••••" required>
                             <span class="toggle-password" onclick="togglePassword('ivac_pass', this)">👁️</span>
                         </div>
                     </div>
@@ -101,7 +103,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
-                        <select name="center">
+                        <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
                             <option value="Rajshahi">Rajshahi</option>
@@ -110,8 +112,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>ভিসา টাইপ (Visa Type)</label>
-                        <select name="visa_type">
+                        <label>ভিসা টাইপ (Visa Type)</label>
+                        <select id="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
@@ -122,42 +124,35 @@
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ১ (Primary Webfile)*</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_1" required></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_2"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_3"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_4"></div>
                     </div>
                 </div>
-                <button type="submit" class="submit-btn">👥 প্রিলোড শুরু করুন</button>
+                <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
         </div>
         
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <form action="/admin/create-user" method="POST" style="margin-bottom: 20px;">
+            <form onsubmit="return false;" style="margin-bottom: 20px;">
                 <div class="form-group">
                     <label>নতুন ইউজারনেম</label>
-                    <input type="text" name="username" required>
+                    <input type="text" id="new-user" required>
                 </div>
                 <div class="form-group">
                     <label>পাসওয়ার্ড</label>
                     <div class="password-container">
-                        <input type="password" id="new-pass" name="password" required>
+                        <input type="password" id="new-pass" required>
                         <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>অ্যাকাউন্ট রোল</label>
-                    <select name="role">
-                        <option value="User">User (সহকারী)</option>
-                        <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
-                    </select>
