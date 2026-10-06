@@ -15,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # মেমরিতে রিয়েল-টাইম সেশন ও ট্র্যাকিং ডাটা
 active_sessions = {}
-admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
+admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": [], "last_message": None}
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,7 +64,7 @@ def admin_dashboard():
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
-    if 'user_id' not in session: return jsonify({"status": "error", "message": "লগইন করা আবশ্যক"}), 401
+    if 'user_id' not in session: return redirect(url_for('login_page'))
     
     center = request.form.get("center")
     visa_type = request.form.get("visa_type")
@@ -72,13 +72,15 @@ def pre_load_group():
     ivac_pass = request.form.get("ivac_pass")
     
     if not ivac_phone or not ivac_pass:
-        return jsonify({"status": "error", "message": "IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"}), 400
+        admin_stats["last_message"] = "❌ IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"
+        return redirect(url_for('admin_dashboard'))
 
     uploaded_count = 0
     for i in range(1, 5):
         file_obj = request.files.get(f"file_{i}")
         if i == 1 and not file_obj:
-            return jsonify({"status": "error", "message": "মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।"}), 400
+            admin_stats["last_message"] = "❌ মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।"
+            return redirect(url_for('admin_dashboard'))
             
         if file_obj and file_obj.filename != '':
             filename = f"{ivac_phone}_member_{i}_{file_obj.filename}"
@@ -88,16 +90,16 @@ def pre_load_group():
     admin_stats["total_uploads"] += 1
     session_id = f"session_{ivac_phone}"
     
-    # মেমরিতে লাইভ ট্র্যাকিং সেশন এন্ট্রি (Traditional Web-Hook সচল রাখার জন্য)
+    # মেমরিতে লাইভ ট্র্যাকিং সেশন এন্ট্রি
     active_sessions[session_id] = {
         "id": session_id,
         "phone": ivac_phone,
         "center": center,
         "visa_type": visa_type,
-        "status": "waiting_for_otp" # ফাইল আপলোডের সাথে সাথে ওটিপি জোন সচল হবে
+        "status": "waiting_for_otp"
     }
 
-    # লাইভ লগে প্রসেসড ডিক্লেয়ার করা হলো
+    # লাইভ লগে আর্কাইভ সেশন ডেটা যুক্ত করা
     admin_stats["history"].append({
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "passport": ivac_phone,
@@ -106,7 +108,9 @@ def pre_load_group():
         "status": "Processed"
     })
     
-    return jsonify({"status": "queued", "session_id": session_id, "message": "সফলভাবে প্রিলোড হয়েছে। "})
+    # ফিক্সড: সাদা স্ক্রিনের বদলে সরাসরি কন্ট্রোল প্যানেলে ব্যাক করানো হলো
+    admin_stats["last_message"] = "🟢 তথ্য ও ওয়েব ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।"
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/api/live-sessions", methods=["GET"])
 def get_live_sessions():
@@ -124,24 +128,23 @@ def api_submit_otp():
 
 @app.route("/admin/create-user", methods=["POST"])
 def create_user():
-    if 'user_id' not in session or session.get('role') != 'Admin': return jsonify({"status": "error", "message": "অনুমতি নেই"}), 403
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-    role = data.get("role")
+    if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
+    
+    username = request.form.get("username")
+    password = request.form.get("password")
+    role = request.form.get("role")
     
     if User.query.filter_by(username=username).first(): 
-        return jsonify({"status": "error", "message": "ইউজারনেম ইতিমধ্যে বিদ্যমান।"}), 400
+        admin_stats["last_message"] = "❌ ইউজারনেম ইতিমধ্যে বিদ্যমান।"
+        return redirect(url_for('admin_dashboard'))
         
     new_user = User(username=username, role=role)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"status": "success", "message": f"নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে। "})
-
-@app.route("/admin/stats", methods=["GET"])
-def get_admin_stats(): 
-    return jsonify(admin_stats)
+    
+    admin_stats["last_message"] = f"🟢 নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে।"
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/logout")
 def logout():
