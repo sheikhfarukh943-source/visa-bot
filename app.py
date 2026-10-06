@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -13,9 +13,9 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = 'uploaded_files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ডাটাবেজ মেমরিতে স্ট্যাটিক সেশন ও ট্র্যাকিং ডাটা
-admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": [], "last_message": None}
+# সেশন এবং আপলোড লগ ডাটা মেমরিতে ফিক্সড রাখা হলো
 active_sessions = {}
+admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": [], "last_message": None}
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -57,10 +57,12 @@ def login_page():
         return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
     return render_template("login.html")
 
+# ফিক্সড রাউট: ড্যাশবোর্ড রেন্ডার করার সময় ডাটাবেজ থেকে অ্যাক্টিভ ইউজারদের তালিকা পাঠানো নিশ্চিত করা হলো
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    return render_template("admin.html", users=User.query.all(), stats=admin_stats, admin_name=session.get('username'))
+    all_users = User.query.all()
+    return render_template("admin.html", users=all_users, stats=admin_stats, admin_name=session.get('username'))
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
