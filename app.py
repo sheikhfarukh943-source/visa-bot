@@ -57,6 +57,7 @@ def login_page():
         return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
     return render_template("login.html")
 
+# ফিক্সড ড্যাশবোর্ড রাউট: ডাটাবেজ এবং ইন-মেমরি লগ ডেটা ফ্রন্টএন্ডে পাঠানো নিশ্চিত করা হলো
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
@@ -142,7 +143,7 @@ def api_submit_otp():
     if s_id in active_sessions:
         active_sessions[s_id]["status"] = "slot_booking_in_progress"
         return jsonify({"status": "success", "message": "ওটিপি বটের কাছে পাঠানো হয়েছে। স্লট বুকিং চেক করা হচ্ছে..."})
-    return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই।"})
+    return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই। "})
 
 @app.route("/logout")
 def logout():
