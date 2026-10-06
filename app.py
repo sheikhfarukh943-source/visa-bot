@@ -44,12 +44,13 @@ class User(db.Model):
         from werkzeug.security import check_password_hash
         return check_password_hash(self.password_hash, password)
 
-# ডিফল্ট অ্যাডমিন অ্যাকাউন্ট তৈরি করা
+# আপনার অনুরোধ অনুযায়ী নির্দিষ্ট অ্যাডমিন অ্যাকাউন্ট তৈরি করা
 with app.app_context():
     db.create_all()
-    if not User.query.filter_by(role="Admin").first():
-        admin = User(username="admin", role="Admin")
-        admin.set_password("admin123")
+    # ডাটাবেজে আপনার দেওয়া স্পেসিফিক আইডিটি চেক করা হচ্ছে
+    if not User.query.filter_by(username="admin_farukh").first():
+        admin = User(username="admin_farukh", role="Admin")
+        admin.set_password("Farukh@1997Lima")
         db.session.add(admin)
         db.session.commit()
 
@@ -104,7 +105,7 @@ def create_user():
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"status": "success", "message": f"'{username}' অ্যাকাউন্টটি তৈরি হয়েছে। "})
+    return jsonify({"status": "success", "message": f"'{username}' অ্যাকাউন্টটি তৈরি হয়েছে।"})
 
 @app.route("/admin/stats", methods=["GET"])
 def get_admin_stats():
@@ -118,11 +119,13 @@ def pre_load_data():
         return jsonify({"status": "error", "message": "লগইন করা আবশ্যক"}), 401
 
     center = request.form.get("center")
+    ivac_user = request.form.get("ivac_user")
+    ivac_pass = request.form.get("ivac_pass")
     passport = request.form.get("passport")
     phone = request.form.get("phone")
     web_file = request.files.get("web_file")
 
-    if not all([center, passport, phone, web_file]):
+    if not all([center, ivac_user, ivac_pass, passport, phone, web_file]):
         return jsonify({"status": "error", "message": "সব তথ্য ও ফাইল দিন"}), 400
 
     filename = web_file.filename
@@ -130,10 +133,10 @@ def pre_load_data():
     web_file.save(file_path)
     admin_stats["total_uploads"] += 1
 
-    asyncio.create_task(run_visa_scheduler(passport, center, passport, phone, file_path, filename))
-    return jsonify({"status": "queued", "session_id": passport, "message": "ফাইল আপলোড ট্র্যাক করা হয়েছে।"})
+    asyncio.create_task(run_visa_scheduler(passport, center, ivac_user, ivac_pass, passport, phone, file_path, filename))
+    return jsonify({"status": "queued", "session_id": passport, "message": "ফাইল এবং IVAC লগইন তথ্য প্রিলোড হয়েছে।"})
 
-async def run_visa_scheduler(session_id, center, passport, phone, file_path, filename):
+async def run_visa_scheduler(session_id, center, ivac_user, ivac_pass, passport, phone, file_path, filename):
     async with async_playwright() as p:
         browser_args = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"]
         proxy_dict = {"server": PROXY_SERVER} if PROXY_SERVER else None
@@ -150,15 +153,16 @@ async def run_visa_scheduler(session_id, center, passport, phone, file_path, fil
             while True:
                 try:
                     await page.goto("https://ivacbd.com", timeout=20000, wait_until="commit")
-                    if await page.query_selector("input[name='passport_number']"): break
+                    if await page.query_selector("input[name='email']"): break
                 except Exception: pass
                 await asyncio.sleep(random.uniform(3.0, 6.0))
 
             active_sessions[session_id]["status"] = "processing_fields"
-            await page.fill("input[name='passport_number']", passport)
-            await page.fill("input[name='mobile_number']", phone)
-            await asyncio.sleep(random.uniform(0.5, 1.5))
-            await page.click("#next-step-btn")
+            
+            await page.fill("input[name='email']", ivac_user)
+            await page.fill("input[name='password']", ivac_pass)
+            await asyncio.sleep(random.uniform(0.5, 1.2))
+            await page.click("#login-btn")
 
             await page.wait_for_selector("input[name='otp_code_input']", timeout=30000)
             active_sessions[session_id]["status"] = "waiting_for_otp"
@@ -179,7 +183,7 @@ async def run_visa_scheduler(session_id, center, passport, phone, file_path, fil
             await page.wait_for_url("**/payment**", timeout=40000)
             admin_stats["successful_bookings"] += 1
             log_entry["status"] = "Success"
-            active_sessions[session_id]["result"] = {"status": "success", "message": "স্লট কনফার্ম!", "payment_url": page.url}
+            active_sessions[session_id]["result"] = {"status": "success", "message": "স্লট কনফার্মড!", "payment_url": page.url}
             await asyncio.sleep(600)
         except Exception as e:
             admin_stats["failed_bookings"] += 1
