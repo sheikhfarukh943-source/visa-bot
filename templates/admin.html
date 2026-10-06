@@ -10,8 +10,9 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .logout-btn { padding: 10px 20px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
         
-        .section-grid { display: flex; gap: 25px; margin-bottom: 30px; }
-        .box { flex: 1; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        .section-grid { display: flex; gap: 25px; margin-bottom: 30px; align-items: flex-start; }
+        /* box কন্টেইনারের হাইট অটো করা হলো যাতে কোনো বাটন হাইড না হয় */
+        .box { flex: 1; background: #1e293b; padding: 25px; border-radius: 12px; border: 1px solid #334155; height: auto; min-height: 450px; box-sizing: border-box; }
         h3 { margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; }
         
         .form-group { margin-bottom: 12px; position: relative; }
@@ -25,8 +26,9 @@
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         .toggle-password:hover { color: #38bdf8; }
         
-        button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
+        button.submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; display: block; }
         button.submit-btn:hover { background: #0369a1; }
+        
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .member-title { font-size: 14px; color: #38bdf8; font-weight: bold; }
         .file-input-wrapper { width: 60%; }
@@ -40,22 +42,17 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
         th { background: #334155; color: #38bdf8; }
         
-        .flash-message { padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; }
         .live-bot-zone { background: #111827; border: 2px dashed #eab308; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
         .live-session-card { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
-        .state-waiting_for_otp { background: #854d0e; color: #fef08a; animation: pulse 1.5s infinite; }
+        .state-waiting_for_otp { background: #854d0e; color: #fef08a; }
         .state-slot_booking_in_progress { background: #1e3a8a; color: #60a5fa; }
-        .state-processing_fields { background: #1e293b; color: #94a3b8; }
-        .state-server_waiting { background: #334155; color: #cbd5e1; }
-        .state-completed { background: #065f46; color: #34d399; }
         
         .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
         .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
         .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
         #bot-log-box { margin-top: 10px; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; display: none; font-weight: bold; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -65,7 +62,7 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- 🤖 ১. বটের লাইভ স্ট্যাটাস ট্র্যাকিং এবং ওটিপি (OTP) জোন -->
+    <!-- 🤖 ১. বটের লাইভ ওটিপি মনিটর জোন -->
     <div class="live-bot-zone">
         <h3 style="color: #eab308; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 0;">🤖 আইভ্যাক সার্ভার হিট ও লাইভ ওটিপি মনিটর (Live Bot Engine)</h3>
         <div id="live-sessions-container">
@@ -93,7 +90,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ভিসา সেন্টার</label>
+                        <label>ভিসা সেন্টার</label>
                         <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
@@ -135,7 +132,7 @@
             <div id="bot-log-box"></div>
         </div>
         
-        <!-- ৩. মেম্বার কোডিং সেকশন (সম্পূর্ণ ফিক্সড লেআউট) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (ফিক্সড সিএসএস লেআউট সহ) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
             <div class="form-group">
@@ -149,9 +146,12 @@
                     <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 20px;">
                 <label>অ্যাকাউন্ট রোল</label>
                 <select id="new-role">
-                    <option value="User">User (सहকারী)</option>
+                    <option value="User">User (সহকারী)</option>
                     <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
                 </select>
+            </div>
+            
+            <!-- বাটন এবং তালিকার ডিজাইন দৃশ্যমান করা হলো -->
