@@ -13,7 +13,7 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = 'uploaded_files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# সেশন এবং আপলোড লগ ডাটা মেমরিতে স্থায়ীভাবে গ্লোবাল রাখা হলো
+# সেশন এবং আপলোড লগ ডাটা মেমরিতে স্থায়ী ও ওপেন রাখা হলো
 active_sessions = {}
 admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
 
@@ -32,7 +32,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 with app.app_context():
-    db.drop_all() # জ্যাম লাগা পুরনো ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ করা হলো
+    db.drop_all() # জ্যাম লাগা পুরনো ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ ও রিসেট করা হলো
     db.create_all()
     if not User.query.filter_by(username="admin_farukh").first():
         admin = User(username="admin_farukh", role="Admin")
@@ -40,59 +40,34 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
+# শতভাগ ডাইরেক্ট রাউট: পেজে ঢোকা মাত্রই কোনো কন্ডিশন ছাড়া সরাসরি মেইন ড্যাশবোর্ড লোড হবে
 @app.route("/")
 def home():
-    if 'user_id' not in session: return redirect(url_for('login_page'))
-    if session.get('role') == 'Admin': return redirect(url_for('admin_dashboard'))
-    return render_template("login.html")
-
-@app.route("/login", methods=["GET", "POST"])
-def login_page():
-    if request.method == "POST":
-        user = User.query.filter_by(username=request.form.get("username")).first()
-        if user and user.check_password(request.form.get("password")):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session['role'] = user.role
-            return redirect(url_for('home'))
-        return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
-    return render_template("login.html")
-
-# শতভাগ সচল ড্যাশবোর্ড ডাটা ম্যাপিং রাউট
-@app.route("/admin")
-def admin_dashboard():
-    if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    
     all_users = User.query.all()
     users_list = [{"username": u.username, "role": u.role} for u in all_users]
     live_list = list(active_sessions.values())
-    
-    return render_template(
-        "admin.html", 
-        users_list=users_list, 
-        stats=admin_stats, 
-        live_sessions=live_list, 
-        admin_name=session.get('username')
-    )
+    return render_template("admin.html", users_list=users_list, stats=admin_stats, live_sessions=live_list)
+
+@app.route("/admin")
+def admin_dashboard():
+    return redirect(url_for('home'))
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
-    if 'user_id' not in session: return redirect(url_for('login_page'))
-    
     center = request.form.get("center")
     visa_type = request.form.get("visa_type")
     ivac_phone = request.form.get("ivac_phone")
     ivac_pass = request.form.get("ivac_pass")
     
     if not ivac_phone or not ivac_pass:
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('home'))
 
     file_obj = request.files.get("file_1")
     if not file_obj or file_obj.filename == '':
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('home'))
 
     uploaded_count = 0
-    # ১০০% ফিক্সড: লুপ ৪ জন মেম্বার বা ৪টি ফাইল রিসিভ করার জন্য সেট করা হলো
+    # ৪ জন মেম্বারের ৪টি ফাইল প্রসেসিং সিস্টেম
     for i in range(1, 5):
         f_obj = request.files.get(f"file_{i}")
         if f_obj and f_obj.filename != '':
@@ -119,25 +94,26 @@ def pre_load_group():
         "status": "Processed"
     })
     
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('home'))
 
 @app.route("/admin/create-user", methods=["POST"])
 def create_user():
-    if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
-    
     username = request.form.get("username")
     password = request.form.get("password")
     role = request.form.get("role")
     
+    if not username or not password:
+        return redirect(url_for('home'))
+        
     if User.query.filter_by(username=username).first(): 
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('home'))
         
     new_user = User(username=username, role=role)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
     
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('home'))
 
 @app.route("/api/live-sessions", methods=["GET"])
 def get_live_sessions():
@@ -149,13 +125,12 @@ def api_submit_otp():
     s_id = data.get("session_id")
     if s_id in active_sessions:
         active_sessions[s_id]["status"] = "slot_booking_in_progress"
-        return jsonify({"status": "success", "message": "ওটিপি বটের কাছে পাঠানো হয়েছে। স্লট বুকিং চেক করা হচ্ছে..."})
+        return jsonify({"status": "success", "message": "ওটিপি বটের কাছে পাঠানো হয়েছে। "})
     return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই। "})
 
 @app.route("/logout")
 def logout():
-    session.clear()
-    return redirect(url_for('login_page'))
+    return redirect(url_for('home'))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
