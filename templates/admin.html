@@ -25,7 +25,8 @@
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         .toggle-password:hover { color: #38bdf8; }
         
-        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; }
+        /* বাটনগুলোর স্থায়ী ও দৃশ্যমান স্টাইল */
+        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; text-decoration: none; }
         .submit-btn:hover { background: #0369a1; }
         
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -42,20 +43,11 @@
         th { background: #334155; color: #38bdf8; }
         
         .flash-message { padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; }
-        .flash-success { background: #065f46; color: #34d399; border: 1px solid #34d399; }
-        .flash-error { background: #991b1b; color: #f87171; border: 1px solid #f87171; }
-        
         .live-bot-zone { background: #111827; border: 2px dashed #eab308; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
         .live-session-card { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; }
         .state-waiting_for_otp { background: #854d0e; color: #fef08a; }
         .state-slot_booking_in_progress { background: #1e3a8a; color: #60a5fa; }
-        
-        .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
-        .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
-        .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        
-        #bot-log-box { margin-top: 10px; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -65,7 +57,6 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- নোটিফিকেশন মেসেজ এরিয়া -->
     <div id="flash-message-box" class="flash-message" style="display: none;"></div>
 
     <!-- 🤖 ১. আইভ্যাক সার্ভার হিট ও ওটিপি মনিটর উইজেট জোন -->
@@ -135,10 +126,9 @@
                 </div>
                 <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
-            <div id="bot-log-box"></div>
         </div>
         
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (স্থায়ীভাবে সচল ও দৃশ্যমান) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (কোনো স্ক্রিপ্ট ক্র্যাশ ছাড়া শতভাগ দৃশ্যমান) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
             <div class="form-group">
@@ -155,7 +145,19 @@
             <div class="form-group">
                 <label>অ্যাকাউন্ট রোল</label>
                 <select id="new-role">
-                    <option value="User">User (सहকারী)</option>
+                    <option value="User">User (সহকারী)</option>
                     <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
                 </select>
             </div>
+            <!-- বাটনটি ফর্ম ট্যাগ এর বাইরে একদম ফ্রেশ লেআউটে রাখা হলো -->
+            <button type="button" class="submit-btn" style="background: #22c55e;" onclick="createUserAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+
+            <h4 style="color: #38bdf8; margin-bottom: 8px; border-top: 1px solid #334155; padding-top: 15px; margin-top: 20px;">📋 তৈরি করা ইউজারদের তালিকা (Active Operators)</h4>
+            <div style="max-height: 180px; overflow-y: auto; background: #111827; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+                <ul id="user-list-render" style="list-style: none; padding: 0; margin: 0; font-size: 13px; color: #e2e8f0;">
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="metrics">
