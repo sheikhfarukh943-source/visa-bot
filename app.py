@@ -100,15 +100,22 @@ def pre_load_group():
 def create_user():
     if 'user_id' not in session or session.get('role') != 'Admin': return jsonify({"status": "error", "message": "অনুমতি নেই"}), 403
     data = request.json
-    if User.query.filter_by(username=data.get("username")).first(): return jsonify({"status": "error", "message": "বিদ্যমান।"}), 400
-    new_user = User(username=data.get("username"), role=data.get("role"))
-    new_user.set_password(data.get("password"))
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
+    
+    if User.query.filter_by(username=username).first(): 
+        return jsonify({"status": "error", "message": "বিদ্যমান।"}), 400
+        
+    new_user = User(username=username, role=role)
+    new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"status": "success", "message": "তৈরি হয়েছে।"})
 
 @app.route("/admin/stats", methods=["GET"])
-def get_admin_stats(): return jsonify(admin_stats)
+def get_admin_stats(): 
+    return jsonify(admin_stats)
 
 @app.route("/logout")
 def logout():
