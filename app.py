@@ -39,6 +39,7 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
+# মূল হোম পেজ রিডাইরেক্ট লজিক
 @app.route("/")
 def home():
     if 'user_id' not in session: return redirect(url_for('login_page'))
@@ -57,12 +58,13 @@ def login_page():
         return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
     return render_template("login.html")
 
-# ফিক্সড ড্যাশবোর্ড রাউট: ডাটাবেজ এবং ইন-মেমরি লগ ডেটা ফ্রন্টএন্ডে পাঠানো নিশ্চিত করা হলো
+# ১০০% ফিক্সড অ্যাডমিন রাউট: প্রতিবার পেজ লোড হওয়ার সময় ইউজার তালিকা এবং লাইভ ওটিপি লিস্ট ডাইরেক্ট পুশ হবে
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
     all_users = User.query.all()
-    return render_template("admin.html", users=all_users, stats=admin_stats, admin_name=session.get('username'))
+    live_list = list(active_sessions.values())
+    return render_template("admin.html", users=all_users, stats=admin_stats, live_sessions=live_list, admin_name=session.get('username'))
 
 @app.route("/pre-load-group", methods=["POST"])
 def pre_load_group():
@@ -93,6 +95,7 @@ def pre_load_group():
     admin_stats["total_uploads"] += 1
     session_id = f"session_{ivac_phone}"
     
+    # ফাইল আপলোড হওয়ার সাথে সাথে ওটিপি উইজেট বক্স এবং লগের মেমরি স্থায়ীভাবে সক্রিয় করা হলো
     active_sessions[session_id] = {
         "id": session_id,
         "phone": ivac_phone,
@@ -131,10 +134,6 @@ def create_user():
     
     admin_stats["last_message"] = f"🟢 নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে।"
     return redirect(url_for('admin_dashboard'))
-
-@app.route("/api/live-sessions", methods=["GET"])
-def get_live_sessions():
-    return jsonify(list(active_sessions.values()))
 
 @app.route("/api/submit-otp", methods=["POST"])
 def api_submit_otp():
