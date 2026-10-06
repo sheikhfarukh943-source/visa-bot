@@ -15,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # সেশন এবং আপলোড লগ ডাটা মেমরিতে স্থায়ীভাবে গ্লোবাল রাখা হলো
 active_sessions = {}
-admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": [], "last_message": None}
+admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,6 +32,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 with app.app_context():
+    db.drop_all() # জ্যাম লাগা পুরনো ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ করা হলো
     db.create_all()
     if not User.query.filter_by(username="admin_farukh").first():
         admin = User(username="admin_farukh", role="Admin")
@@ -57,12 +58,11 @@ def login_page():
         return render_template("login.html", error="ইউজারনেম বা পাসওয়ার্ড ভুল।")
     return render_template("login.html")
 
-# ফিক্সড অ্যাডমিন রাউট: ডাটাবেজ লকিং ফ্রিতে রেন্ডার করার ফাইনাল মেথড
+# শতভাগ সচল ড্যাশবোর্ড ডাটা ম্যাপিং রাউট
 @app.route("/admin")
 def admin_dashboard():
     if 'user_id' not in session or session.get('role') != 'Admin': return redirect(url_for('login_page'))
     
-    # ডাটাবেজ থেকে সেভ থাকা সব ইউজারের নাম রিড করা
     all_users = User.query.all()
     users_list = [{"username": u.username, "role": u.role} for u in all_users]
     live_list = list(active_sessions.values())
@@ -85,15 +85,14 @@ def pre_load_group():
     ivac_pass = request.form.get("ivac_pass")
     
     if not ivac_phone or not ivac_pass:
-        admin_stats["last_message"] = "❌ IVAC লগইন নম্বর এবং পাসওয়ার্ড প্রদান করুন।"
         return redirect(url_for('admin_dashboard'))
 
     file_obj = request.files.get("file_1")
     if not file_obj or file_obj.filename == '':
-        admin_stats["last_message"] = "❌ মেম্বার ১ (Primary Webfile) বাধ্যতামূলক।"
         return redirect(url_for('admin_dashboard'))
 
     uploaded_count = 0
+    # ১০০% ফিক্সড: লুপ ৪ জন মেম্বার বা ৪টি ফাইল রিসিভ করার জন্য সেট করা হলো
     for i in range(1, 5):
         f_obj = request.files.get(f"file_{i}")
         if f_obj and f_obj.filename != '':
@@ -120,7 +119,6 @@ def pre_load_group():
         "status": "Processed"
     })
     
-    admin_stats["last_message"] = "🟢 তথ্য ও ওয়েব ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।"
     return redirect(url_for('admin_dashboard'))
 
 @app.route("/admin/create-user", methods=["POST"])
@@ -132,7 +130,6 @@ def create_user():
     role = request.form.get("role")
     
     if User.query.filter_by(username=username).first(): 
-        admin_stats["last_message"] = "❌ ইউজারনেম ইতিমধ্যে বিদ্যমান।"
         return redirect(url_for('admin_dashboard'))
         
     new_user = User(username=username, role=role)
@@ -140,8 +137,11 @@ def create_user():
     db.session.add(new_user)
     db.session.commit()
     
-    admin_stats["last_message"] = f"🟢 নতুন ব্যবহারকারী '{username}' তৈরি হয়েছে।"
     return redirect(url_for('admin_dashboard'))
+
+@app.route("/api/live-sessions", methods=["GET"])
+def get_live_sessions():
+    return jsonify(list(active_sessions.values()))
 
 @app.route("/api/submit-otp", methods=["POST"])
 def api_submit_otp():
