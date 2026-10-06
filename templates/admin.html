@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - IVAC Ultimate Control Panel</title>
+    <title>SlotBuddy - IVAC Custom Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -47,7 +47,7 @@
     </div>
     
     <div class="section-grid">
-        <!-- আপডেটেড মাল্টি-ফাইল বুকিং প্যানেল -->
+        <!-- মাল্টি-ফাইল বুকিং প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form id="ivac-group-form" enctype="multipart/form-data">
@@ -64,26 +64,16 @@
                     </div>
                 </div>
 
-                <!-- সেন্টার ও ভিসা টাইপ সেকশন -->
+                <!-- ফিল্টার করা ৫টি সেন্টার ও ভিসা টাইপ সেকশন -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ভিসা সেন্টার (সবগুলো সচল সেন্টার)</label>
+                        <label>ভিসা সেন্টার</label>
                         <select name="center" id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
-                            <option value="Sylhet">Sylhet</option>
                             <option value="Rajshahi">Rajshahi</option>
+                            <option value="Sylhet">Sylhet</option>
                             <option value="Khulna">Khulna</option>
-                            <option value="Jessore">Jessore</option>
-                            <option value="Barisal">Barisal</option>
-                            <option value="Mymensingh">Mymensingh</option>
-                            <option value="Rangpur">Rangpur</option>
-                            <option value="Comilla">Comilla</option>
-                            <option value="Noakhali">Noakhali</option>
-                            <option value="Brahmanbaria">Brahmanbaria</option>
-                            <option value="Satkhira">Satkhira</option>
-                            <option value="Bogra">Bogra</option>
-                            <option value="Thakurgaon">Thakurgaon</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -98,7 +88,7 @@
                     </div>
                 </div>
 
-                <!-- পাসপোর্ট/মোবাইল বাদ দিয়ে শুধুমাত্র ফাইল আপলোড অপশন -->
+                <!-- শুধুমাত্র ফাইল আপলোড অপশন -->
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row" style="border-color: #38bdf8;">
                         <span class="member-title" style="color: #38bdf8;">📄 মেম্বার ১ (Primary Webfile)*</span>
@@ -180,3 +170,19 @@
 
     async function uploadGroupData() {
         const form = document.getElementById('ivac-group-form');
+        const formData = new FormData(form);
+        showBotLog('⏳ তথ্য ও ওয়েব ফাইল প্রিলোড হচ্ছে...', '#1e3a8a', '#60a5fa');
+
+        let res = await fetch('/pre-load-group', { method: 'POST', body: formData });
+        let data = await res.json();
+        
+        if(data.status === 'queued') {
+            activeGroupKey = data.session_id;
+            showBotLog('🟢 বট ব্যাকএন্ডে রেডি। আইভ্যাক পোর্টালে লগইন ও সাবমিশন শুরু হচ্ছে...', '#1e293b', '#e2e8f0');
+            trackLoop = setInterval(checkGroupProgress, 2000);
+        } else {
+            showBotLog('❌ ত্রুটি: ' + data.message, '#991b1b', '#f87171');
+        }
+    }
+
+    async function checkGroupProgress() {
