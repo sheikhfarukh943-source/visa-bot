@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>SlotBuddy - Advanced Group Control Panel</title>
+    <title>SlotBuddy - IVAC Ultimate Control Panel</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }
         .dashboard { max-width: 1200px; margin: 0 auto; }
@@ -15,14 +15,15 @@
         h3 { margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; }
         
         .form-group { margin-bottom: 12px; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 12px; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
         label { display: block; margin-bottom: 4px; font-size: 13px; color: #94a3b8; }
         input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 8px; }
         
-        .member-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; }
-        .member-title { font-size: 14px; color: #38bdf8; font-weight: bold; margin-bottom: 8px; }
-        .row-inputs { display: flex; gap: 10px; }
-        .row-inputs div { flex: 1; }
+        .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .member-title { font-size: 14px; color: #38bdf8; font-weight: bold; }
+        .file-input-wrapper { width: 60%; }
 
         .metrics { display: flex; gap: 20px; margin-bottom: 30px; }
         .card { flex: 1; background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; text-align: center; }
@@ -46,65 +47,83 @@
     </div>
     
     <div class="section-grid">
-        <!-- গ্রুপ ফাইল আপলোড প্যানেল -->
+        <!-- আপডেটেড মাল্টি-ফাইল বুকিং প্যানেল -->
         <div class="box" style="flex: 2;">
-            <h3>📤 গ্রুপ তথ্য ও ৪টি ওয়েব ফাইল আপলোড প্যানেল</h3>
+            <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
             <form id="ivac-group-form" enctype="multipart/form-data">
-                <div class="form-group" style="max-width: 300px; margin-bottom: 15px;">
-                    <label>ভিসা সেন্টার</label>
-                    <select name="center" id="center">
-                        <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
-                        <option value="Chittagong">Chittagong</option>
-                        <option value="Sylhet">Sylhet</option>
-                    </select>
-                </div>
-
-                <!-- ৪ জন মেম্বারের ডাইনামিক ইনপুট সেকশন -->
-                <div id="members-container">
-                    <!-- মেম্বার ১ (Primary Webfile) -->
-                    <div class="member-row" style="border-color: #38bdf8;">
-                        <div class="member-title" style="color: #38bdf8;">👤 মেম্বার ১ (Primary Webfile)*</div>
-                        <div class="row-inputs">
-                            <div><input type="text" name="passport_1" placeholder="প্রাইমারি পাসপোর্ট নম্বর" required></div>
-                            <div><input type="text" name="phone_1" placeholder="প্রাইমারি মোবাইল নম্বর" required></div>
-                            <div><input type="file" name="file_1" required></div>
-                        </div>
+                
+                <!-- IVAC অ্যাকাউন্ট লগইন ক্রেডেন্সিয়ালস -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>IVAC ইউজার আইডি / ইমেইল (User ID)</label>
+                        <input type="email" name="ivac_user" id="ivac_user" placeholder="example@email.com" required>
                     </div>
-                    <!-- মেম্বার ২ -->
-                    <div class="member-row">
-                        <div class="member-title">👤 মেম্বার ২</div>
-                        <div class="row-inputs">
-                            <div><input type="text" name="passport_2" placeholder="পাসপোর্ট নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="text" name="phone_2" placeholder="মোবাইল নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="file" name="file_2"></div>
-                        </div>
-                    </div>
-                    <!-- মেম্বার ৩ -->
-                    <div class="member-row">
-                        <div class="member-title">👤 মেম্বার ৩</div>
-                        <div class="row-inputs">
-                            <div><input type="text" name="passport_3" placeholder="পাসপোর্ট নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="text" name="phone_3" placeholder="মোবাইল নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="file" name="file_3"></div>
-                        </div>
-                    </div>
-                    <!-- মেম্বার ৪ -->
-                    <div class="member-row">
-                        <div class="member-title">👤 মেম্বার ৪</div>
-                        <div class="row-inputs">
-                            <div><input type="text" name="passport_4" placeholder="পাসপোর্ট নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="text" name="phone_4" placeholder="মোবাইল নম্বর (ঐচ্ছিক)"></div>
-                            <div><input type="file" name="file_4"></div>
-                        </div>
+                    <div class="form-group">
+                        <label>IVAC অ্যাকাউন্ট পাসওয়ার্ড (Password)</label>
+                        <input type="password" name="ivac_pass" id="ivac_pass" placeholder="••••••••" required>
                     </div>
                 </div>
 
-                <button type="button" onclick="uploadGroupData()">👥 গ্রুপ সচল ও ফাইল প্রিলোড করুন</button>
+                <!-- সেন্টার ও ভিসা টাইপ সেকশন -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ভিসা সেন্টার (সবগুলো সচল সেন্টার)</label>
+                        <select name="center" id="center">
+                            <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
+                            <option value="Chittagong">Chittagong</option>
+                            <option value="Sylhet">Sylhet</option>
+                            <option value="Rajshahi">Rajshahi</option>
+                            <option value="Khulna">Khulna</option>
+                            <option value="Jessore">Jessore</option>
+                            <option value="Barisal">Barisal</option>
+                            <option value="Mymensingh">Mymensingh</option>
+                            <option value="Rangpur">Rangpur</option>
+                            <option value="Comilla">Comilla</option>
+                            <option value="Noakhali">Noakhali</option>
+                            <option value="Brahmanbaria">Brahmanbaria</option>
+                            <option value="Satkhira">Satkhira</option>
+                            <option value="Bogra">Bogra</option>
+                            <option value="Thakurgaon">Thakurgaon</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ভিসা টাইপ (Visa Type)</label>
+                        <select name="visa_type" id="visa_type">
+                            <option value="Tourist">Tourist Visa</option>
+                            <option value="Medical">Medical Visa</option>
+                            <option value="Business">Business Visa</option>
+                            <option value="Student">Student Visa</option>
+                            <option value="Employment">Employment Visa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- পাসপোর্ট/মোবাইল বাদ দিয়ে শুধুমাত্র ফাইল আপলোড অপশন -->
+                <div id="file-uploads-container" style="margin-top: 15px;">
+                    <div class="member-upload-row" style="border-color: #38bdf8;">
+                        <span class="member-title" style="color: #38bdf8;">📄 মেম্বার ১ (Primary Webfile)*</span>
+                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
+                    </div>
+                    <div class="member-upload-row">
+                        <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
+                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
+                    </div>
+                    <div class="member-upload-row">
+                        <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
+                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
+                    </div>
+                    <div class="member-upload-row">
+                        <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
+                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="uploadGroupData()">👥 বট সচল ও প্রিলোড শুরু করুন</button>
             </form>
             <div id="bot-log-box"></div>
             
             <div id="otp-zone">
-                <label style="color: #eab308; font-weight: bold;">Primary Mobile OTP দিন:</label>
+                <label style="color: #eab308; font-weight: bold;">IVAC অ্যাকাউন্ট OTP দিন:</label>
                 <input type="text" id="otp-val" placeholder="XXXXXX" maxlength="6" style="text-align: center; font-size: 18px;">
                 <button type="button" onclick="submitGroupOtp()" style="background:#eab308; color: #0f172a; margin-top: 8px;">ওটিপি নিশ্চিত করুন</button>
             </div>
@@ -135,7 +154,7 @@
     
     <!-- পরিসংখ্যান কার্ডসমূহ -->
     <div class="metrics">
-        <div class="card"><h2><span id="total-uploads">0</span></h2><p>মোট আপলোড করা গ্রুপ</p></div>
+        <div class="card"><h2><span id="total-uploads">0</span></h2><p>মোট আপলোড করা সেশন</p></div>
         <div class="card"><h2 id="success-count" style="color: #22c55e;">0</h2><p>সফল বুকিং</p></div>
         <div class="card"><h2 id="failed-count" style="color: #ef4444;">0</h2><p>ব্যর্থ সেশন</p></div>
     </div>
@@ -145,9 +164,9 @@
         <thead>
             <tr>
                 <th>সময়</th>
-                <th>প্রাইমারি পাসপোর্ট</th>
+                <th>IVAC ইউজার আইডি</th>
                 <th>ভিসা সেন্টার</th>
-                <th>মেম্বার সংখ্যা</th>
+                <th>ভিসা টাইপ</th>
                 <th>বর্তমান অবস্থা</th>
             </tr>
         </thead>
@@ -161,27 +180,3 @@
 
     async function uploadGroupData() {
         const form = document.getElementById('ivac-group-form');
-        const formData = new FormData(form);
-        showBotLog('⏳ গ্রুপ ফাইল প্রিলোড হচ্ছে...', '#1e3a8a', '#60a5fa');
-
-        let res = await fetch('/pre-load-group', { method: 'POST', body: formData });
-        let data = await res.json();
-        
-        if(data.status === 'queued') {
-            activeGroupKey = data.session_id;
-            showBotLog('🟢 বট মেমরিতে গ্রুপ রেডি করেছে। আইভ্যাক পোর্টালে সাবমিট হচ্ছে...', '#1e293b', '#e2e8f0');
-            trackLoop = setInterval(checkGroupProgress, 2000);
-        } else {
-            showBotLog('❌ ত্রুটি: ' + data.message, '#991b1b', '#f87171');
-        }
-    }
-
-    async function checkGroupProgress() {
-        if(!activeGroupKey) return;
-        let res = await fetch('/poll-status/' + activeGroupKey);
-        let data = await res.json();
-
-        if(data.status === 'server_waiting') {
-            showBotLog('🤖 অ্যান্টি-ব্লক মোডে বট আইভ্যাক পোর্টাল লোড করার চেষ্টা করছে...', '#1e293b', '#e2e8f0');
-        } else if(data.status === 'processing_fields') {
-            showBotLog('⚡ সার্ভার লাইভ! বট পর্যায়ক্রমে ৪ জনের ফর্ম ফিলাপ করছে...', '#1e3a8a', '#60a5fa');
