@@ -13,9 +13,15 @@ db = SQLAlchemy(app)
 UPLOAD_FOLDER = 'uploaded_files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# মেমরিতে রিয়েল-টাইম সেশন ও ট্র্যাকিং ডাটা
-active_sessions = {}
-admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": [], "last_message": None}
+# সেশন এবং আপলোড লগ ডাটা ব্যাকএন্ডে স্থায়ী ও স্ট্যাটিক রাখা হলো
+admin_stats = {
+    "total_uploads": 0, 
+    "successful_bookings": 0, 
+    "failed_bookings": 0, 
+    "history": [], 
+    "last_message": None,
+    "live_sessions": [] # ফ্রন্টএন্ড পোলিংয়ের জন্য মেমরিতে ফিক্সড লিস্ট
+}
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -88,18 +94,17 @@ def pre_load_group():
             uploaded_count += 1
 
     admin_stats["total_uploads"] += 1
-    session_id = f"session_{ivac_phone}"
+    session_id = f"session_{ivac_phone}_{int(datetime.now().timestamp())}"
     
-    # মেমরিতে লাইভ ট্র্যাকিং সেশন এন্ট্রি
-    active_sessions[session_id] = {
+    # ফাইল আপলোড হওয়ার সাথে সাথে ওটিপি উইজেট লাইভ অন করার জন্য স্ট্যাটিক সেশন এন্ট্রি
+    admin_stats["live_sessions"] = [{
         "id": session_id,
         "phone": ivac_phone,
         "center": center,
         "visa_type": visa_type,
-        "status": "waiting_for_otp"
-    }
+        "status": "waiting_for_otp" # ওটিপি বক্স সবসময় ফিক্সড স্ক্রিনে দেখাবে
+    }]
 
-    # লাইভ লগে আর্কাইভ সেশন ডেটা যুক্ত করা
     admin_stats["history"].append({
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "passport": ivac_phone,
@@ -108,23 +113,23 @@ def pre_load_group():
         "status": "Processed"
     })
     
-    # ফিক্সড: সাদা স্ক্রিনের বদলে সরাসরি কন্ট্রোল প্যানেলে ব্যাক করানো হলো
     admin_stats["last_message"] = "🟢 তথ্য ও ওয়েব ফাইল ড্যাশবোর্ডে সফলভাবে লোড হয়েছে।"
     return redirect(url_for('admin_dashboard'))
 
 @app.route("/api/live-sessions", methods=["GET"])
 def get_live_sessions():
-    return jsonify(list(active_sessions.values()))
+    return jsonify(admin_stats["live_sessions"])
 
 @app.route("/api/submit-otp", methods=["POST"])
 def api_submit_otp():
     data = request.json
     s_id = data.get("session_id")
     otp = data.get("otp")
-    if s_id in active_sessions:
-        active_sessions[s_id]["status"] = "slot_booking_in_progress"
-        return jsonify({"status": "success", "message": "ওটিপি সফলভাবে বটের কাছে পাঠানো হয়েছে। স্লট বুকিং চেক করা হচ্ছে..."})
-    return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই। "})
+    
+    if admin_stats["live_sessions"] and admin_stats["live_sessions"][0]["id"] == s_id:
+        admin_stats["live_sessions"][0]["status"] = "slot_booking_in_progress"
+        return jsonify({"status": "success", "message": f"ওটিপি কোড [{otp}] সফলভাবে সাবমিট হয়েছে! স্লট বুকিং চেক করা হচ্ছে..."})
+    return jsonify({"status": "error", "message": "কোনো সক্রিয় সেশন খুঁজে পাওয়া যায়নি। "})
 
 @app.route("/admin/create-user", methods=["POST"])
 def create_user():
