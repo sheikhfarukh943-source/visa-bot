@@ -25,8 +25,7 @@
         .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #94a3b8; font-size: 18px; user-select: none; z-index: 99; }
         .toggle-password:hover { color: #38bdf8; }
         
-        /* বাটনের স্থায়ী স্টাইল নিশ্চিত করা হলো */
-        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; text-decoration: none; }
+        .submit-btn { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 15px; display: block; text-align: center; }
         .submit-btn:hover { background: #0369a1; }
         
         .member-upload-row { border: 1px solid #334155; padding: 12px; border-radius: 8px; background: #111827; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -52,6 +51,7 @@
         .otp-input-inline { display: flex; gap: 10px; margin-top: 8px; }
         .otp-input-inline input { width: 130px; text-align: center; font-size: 16px; letter-spacing: 2px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; padding: 6px; }
         .otp-input-inline button { padding: 6px 15px; background: #eab308; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        #flash-message-box { display: none; }
     </style>
 </head>
 <body>
@@ -61,12 +61,9 @@
         <a href="/logout" class="logout-btn">🚪 লগআউট</a>
     </div>
 
-    <!-- নোটিফিকেশন ব্যানার এরিয়া -->
-    {% if stats and stats.last_message %}
-        <div class="flash-message" style="background: #065f46; color: #34d399; border: 1px solid #34d399;">{{ stats.last_message }}</div>
-    {% endif %}
+    <div id="flash-message-box" class="flash-message"></div>
 
-    <!-- 🤖 ১. আইভ্যাক সার্ভার হিট ও ওটিপি মনিটর উইজেট জোন -->
+    <!-- 🤖 ১. ওটিপি বসানোর জায়গা (Live Widget Zone) -->
     <div class="live-bot-zone">
         <h3 style="color: #eab308; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 0;">🤖 আইভ্যাক সার্ভার হিট ও লাইভ ওটিপি মনিটর (Live Bot Engine)</h3>
         <div id="live-sessions-container">
@@ -78,16 +75,16 @@
         <!-- ২. প্রিলোড ফর্ম প্যানেল -->
         <div class="box" style="flex: 2;">
             <h3>📤 IVAC অ্যাকাউন্ট লগইন ও ওয়েব ফাইল আপলোড প্যানেল</h3>
-            <form action="/pre-load-group" method="POST" enctype="multipart/form-data">
+            <form id="ivac-group-form" onsubmit="return false;">
                 <div class="form-row">
                     <div class="form-group">
                         <label>IVAC লগইন নম্বর (Login Number / Mobile)</label>
-                        <input type="text" name="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
+                        <input type="text" id="ivac_phone" placeholder="যেমন: 01XXXXXXXXX" required>
                     </div>
                     <div class="form-group">
                         <label>IVAC পাসওয়ার্ড (IVAC Password)</label>
                         <div class="password-container">
-                            <input type="password" id="ivac_pass" name="ivac_pass" placeholder="••••••••" required>
+                            <input type="password" id="ivac_pass" placeholder="••••••••" required>
                             <span class="toggle-password" onclick="togglePassword('ivac_pass', this)">👁️</span>
                         </div>
                     </div>
@@ -95,7 +92,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>ভিসা সেন্টার</label>
-                        <select name="center">
+                        <select id="center">
                             <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
                             <option value="Chittagong">Chittagong</option>
                             <option value="Rajshahi">Rajshahi</option>
@@ -105,7 +102,7 @@
                     </div>
                     <div class="form-group">
                         <label>ভিসা টাইপ (Visa Type)</label>
-                        <select name="visa_type">
+                        <select id="visa_type">
                             <option value="Tourist">Tourist Visa</option>
                             <option value="Medical">Medical Visa</option>
                             <option value="Business">Business Visa</option>
@@ -116,41 +113,46 @@
                 <div id="file-uploads-container" style="margin-top: 15px;">
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ১ (Primary Webfile)*</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_1" required></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_1" required></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ২ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_2"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_2"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৩ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_3"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_3"></div>
                     </div>
                     <div class="member-upload-row">
                         <span class="member-title">📄 মেম্বার ৪ (Webfile)</span>
-                        <div class="file-input-wrapper"><input type="file" name="file_4"></div>
+                        <div class="file-input-wrapper"><input type="file" id="file_4"></div>
                     </div>
                 </div>
-                <button type="submit" class="submit-btn">👥 প্রিলোড শুরু করুন</button>
+                <button type="button" class="submit-btn" onclick="uploadGroupData()">👥 প্রিলোড শুরু করুন</button>
             </form>
         </div>
         
-        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (পিওর নেটিভ ফর্ম সাবমিশন, বাটন কখনোই হারাবে না) -->
+        <!-- ৩. ব্যবহারকারী ব্যবস্থাপনা প্যানেল (স্থায়ীভাবে দৃশ্যমান) -->
         <div class="box">
             <h3>👥 ব্যবহারকারী ব্যবস্থাপনা</h3>
-            <form action="/admin/create-user" method="POST">
-                <div class="form-group">
-                    <label>নতুন ইউজারনেম</label>
-                    <input type="text" name="username" placeholder="Username" required>
+            <div class="form-group">
+                <label>নতুন ইউজারনেম</label>
+                <input type="text" id="new-user" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <label>পাসওয়ার্ড</label>
+                <div class="password-container">
+                    <input type="password" id="new-pass" placeholder="Password" required>
+                    <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
                 </div>
-                <div class="form-group">
-                    <label>পাসওয়ার্ড</label>
-                    <div class="password-container">
-                        <input type="password" id="new-pass" name="password" placeholder="Password" required>
-                        <span class="toggle-password" onclick="togglePassword('new-pass', this)">👁️</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>অ্যাকাউন্ট রোল</label>
-                    <select name="role">
-                        <option value="User">User </option>
+            </div>
+            <div class="form-group">
+                <label>অ্যাকাউন্ট রোল</label>
+                <select id="new-role">
+                    <option value="User">User (सहকারী)</option>
+                    <option value="Admin">Admin (প্রধান অ্যাডমিন)</option>
+                </select>
+            </div>
+            <button type="button" class="submit-btn" style="background: #22c55e;" onclick="createUserAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+
+            <h4 style="color: #38bdf8; margin-bottom: 8px; border-top: 1px solid #334155; padding-top: 15px; margin-top: 20px;">📋 তৈরি করা ইউজারদের তালিকা (Active Operators)</h4>
