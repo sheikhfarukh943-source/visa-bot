@@ -1,4 +1,5 @@
 import os
+import sys
 from flask import Flask, render_template, request, redirect, url_for, flash
 from supabase import create_client, Client
 from werkzeug.utils import secure_filename
@@ -7,14 +8,20 @@ from datetime import datetime, timezone
 app = Flask(__name__)
 app.secret_key = "visa-bot-secure-session-key"
 
-# Supabase Credentials from Environment Variables
+# Supabase Credentials সরাসরি পরিবেশ চলক থেকে রিড করা হচ্ছে
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-if SUPABASE_URL and SUPABASE_KEY:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-else:
+# ডাটাবেজ কানেকশন চেক ও ট্রাই-ক্যাচ ব্লক
+try:
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    else:
+        supabase = None
+        print("Warning: Supabase credentials are empty or missing.")
+except Exception as e:
     supabase = None
+    print(f"Supabase connection error: {e}")
 
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'zip', 'html'}
@@ -31,7 +38,7 @@ def index():
             res = supabase.table("slots").select("*").eq("status", "available").execute()
             slots_data = res.data if res.data else []
         except Exception as e:
-            print(f"Database error: {e}")
+            print(f"Database query error: {e}")
     return render_template('index.html', slots=slots_data)
 
 @app.route('/login')
@@ -51,12 +58,11 @@ def create_group():
     m4 = request.form.get('member_4')
     slot_id = request.form.get('slot_id')
     
-    # স্লট বুকিং টাইম লক লজিক (২০ মিনিট আগে ফাইল লক করা)
     if slot_id:
         try:
             slot_res = supabase.table("slots").select("slot_time").eq("id", int(slot_id)).execute()
             if slot_res.data and len(slot_res.data) > 0:
-                slot_time_str = slot_res.data['slot_time'].replace('Z', '+00:00')
+                slot_time_str = slot_res.data[0]['slot_time'].replace('Z', '+00:00')
                 slot_time = datetime.fromisoformat(slot_time_str)
                 now = datetime.now(timezone.utc)
                 time_diff = (slot_time - now).total_seconds() / 60
@@ -87,13 +93,12 @@ def create_group():
     try:
         group_res = supabase.table("group_bookings").insert(group_data).execute()
         if group_res.data and len(group_res.data) > 0 and slot_id:
-            new_group_id = group_res.data['id']
-            # স্বয়ংক্রিয়ভাবে স্লট স্টেটাস pending করা
+            new_group_id = group_res.data[0]['id']
             supabase.table("slots").update({
                 "status": "pending", 
                 "booked_by_group_id": int(new_group_id)
             }).eq("id", int(slot_id)).execute()
-            flash("গ্রুপ এবং ফাইল সফলভাবে যুক্ত হয়েছে! অনুগ্রহ করে নিচের ফর্মে পেমেন্ট সম্পন্ন করুন।", "success")
+            flash("গ্রুপ এবং ফাইল সফলভাবে যুক্ত হয়েছে! অনুগ্রহ করে পেমেন্ট সম্পন্ন করুন।", "success")
         else:
             flash("গ্রুপ তৈরি হয়েছে কিন্তু স্লট নির্বাচন করা হয়নি।", "warning")
     except Exception as e:
@@ -120,8 +125,10 @@ def admin_dashboard():
     slots_data = []
     if supabase:
         try:
-            bookings_data = supabase.table("group_bookings").select("*").execute().data
-            slots_data = supabase.table("slots").select("*").execute().data
+            bookings_res = supabase.table("group_bookings").select("*").execute()
+            slots_res = supabase.table("slots").select("*").execute()
+            bookings_data = bookings_res.data if bookings_res.data else []
+            slots_data = slots_res.data if slots_res.data else []
         except Exception as e:
             print(f"Admin Dashboard error: {e}")
     return render_template('admin.html', bookings=bookings_data, slots=slots_data)
@@ -138,6 +145,5 @@ def approve_payment(slot_id):
     return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
-    # এই অংশটি Render-এর পোর্ট (যেমন: 10000) অটোমেটিকভাবে রিড করবে
     port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port)
