@@ -8,20 +8,18 @@ from datetime import datetime, timezone
 app = Flask(__name__)
 app.secret_key = "visa-bot-secure-session-key"
 
-# Supabase Credentials সরাসরি পরিবেশ চলক থেকে রিড করা হচ্ছে
+# Supabase Credentials
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-# ডাটাবেজ কানেকশন চেক ও ট্রাই-ক্যাচ ব্লক
 try:
     if SUPABASE_URL and SUPABASE_KEY:
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     else:
         supabase = None
-        print("Warning: Supabase credentials are empty or missing.")
 except Exception as e:
     supabase = None
-    print(f"Supabase connection error: {e}")
+    print(f"Supabase init error: {e}")
 
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'zip', 'html'}
@@ -92,15 +90,16 @@ def create_group():
     
     try:
         group_res = supabase.table("group_bookings").insert(group_data).execute()
-        if group_res.data and len(group_res.data) > 0 and slot_id:
+        if group_res.data and len(group_res.data) > 0:
             new_group_id = group_res.data[0]['id']
-            supabase.table("slots").update({
-                "status": "pending", 
-                "booked_by_group_id": int(new_group_id)
-            }).eq("id", int(slot_id)).execute()
+            if slot_id:
+                supabase.table("slots").update({
+                    "status": "pending", 
+                    "booked_by_group_id": int(new_group_id)
+                }).eq("id", int(slot_id)).execute()
             flash("গ্রুপ এবং ফাইল সফলভাবে যুক্ত হয়েছে! অনুগ্রহ করে পেমেন্ট সম্পন্ন করুন।", "success")
         else:
-            flash("গ্রুপ তৈরি হয়েছে কিন্তু স্লট নির্বাচন করা হয়নি।", "warning")
+            flash("গ্রুপ তৈরি ব্যর্থ হয়েছে।", "danger")
     except Exception as e:
         flash(f"ডাটাবেজ সাবমিশনে সমস্যা হয়েছে: {str(e)}", "danger")
         
