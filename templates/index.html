@@ -4,118 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>স্বয়ংক্রিয় স্লট বুকিং পোর্টাল</title>
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-custom { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-custom { border: none; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: white; transition: transform 0.3s; }
-        .card-custom:hover { transform: translateY(-5px); }
-        .btn-gradient-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border: none; color: white; font-weight: 6px; }
-        .btn-gradient-primary { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border: none; color: white; font-weight: 6px; }
-        .form-control, .form-select { border-radius: 8px; padding: 10px; border: 1px solid #ced4da; }
-        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25); border-color: #2a5298; }
-        .section-title { position: relative; padding-bottom: 10px; margin-bottom: 20px; font-weight: 700; color: #1e3c72; }
-        .section-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; background-color: #38ef7d; border-radius: 2px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+        
+        .navbar-custom { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 18px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: white; }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav-brand { font-size: 22px; font-weight: bold; text-decoration: none; color: white; }
+        .nav-link-admin { background-color: white; color: #1e3c72; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; }
+        .nav-link-admin:hover { background-color: #e2e8f0; }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+        .card-custom { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
+        .section-title { font-size: 20px; font-weight: 700; color: #1e3c72; margin-bottom: 25px; border-bottom: 3px solid #38ef7d; padding-bottom: 8px; display: inline-block; }
+        
+        .alert-info-box { background-color: #e0f2fe; border-left: 5px solid #0284c7; padding: 15px; border-radius: 8px; color: #0369a1; font-size: 15px; margin-bottom: 25px; }
+        
+        .mb-3 { margin-bottom: 20px; }
+        .form-label { display: block; font-weight: 600; color: #4a5568; margin-bottom: 8px; font-size: 15px; }
+        .form-control, .form-select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; background-color: #f8fafc; transition: 0.3s; }
+        .form-control:focus, .form-select:focus { outline: none; border-color: #2a5298; background-color: white; box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.15); }
+        
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        
+        .btn-gradient-success { display: inline-block; width: 100%; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border: none; padding: 14px; color: white; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(56, 239, 125, 0.3); transition: 0.3s; }
+        .btn-gradient-success:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-gradient-primary { display: inline-block; width: 100%; background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border: none; padding: 14px; color: white; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 114, 255, 0.3); transition: 0.3s; }
+        .btn-gradient-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+
+        .flash-messages { max-width: 1200px; margin: 20px auto 0 auto; padding: 0 20px; }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 500; }
+        .alert-success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-warning { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-custom py-3 mb-5">
-    <div class="container d-flex justify-content-between align-items-center">
-        <span class="navbar-brand mb-0 h1 text-white"><i class="fa-solid fa-bolt me-2"></i> স্লট বুকিং ও ফাইল সহকারী</span>
-        <a href="/login" class="btn btn-light btn-sm rounded-pill px-4 shadow-sm fw-bold text-primary">অ্যাডমিন লগইন</a>
+<nav class="navbar navbar-custom">
+    <div class="nav-container">
+        <a href="/" class="nav-brand">⚡ স্লট বুকিং ও ফাইল সহকারী</a>
+        <a href="/login" class="nav-link-admin">অ্যাডমিন লগইন</a>
     </div>
 </nav>
 
-<div class="container">
+<div class="flash-messages">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ category if category != 'danger' else 'danger' }} alert-dismissible fade show shadow-sm rounded-3 mb-4" role="alert">
-             <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2"></i> {{ message }}
-             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <div class="alert alert-{{ 'success' if category == 'success' else ('warning' if category == 'warning' else 'danger') }}">
+             {{ message }}
           </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
+</div>
 
-    <div class="row g-4">
-        <!-- ফর্ম ১: গ্রুপ তৈরি ও বুকিং -->
-        <div class="col-lg-6">
-            <div class="card card-custom p-4">
-                <h4 class="section-title"><i class="fa-solid fa-users text-primary me-2"></i> ১ থেকে ৪ জনের গ্রুপ ও ফাইল ফর্ম</h4>
-                <form action="/create-group" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">গ্রুপের নাম (বা একক নাম)</label>
-                        <input type="text" name="group_name" class="form-control" required placeholder="উদা: টিম এ বা আপনার নাম">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">মেম্বার ১ (আবশ্যিক)</label>
-                        <input type="text" name="member_1" class="form-control" required placeholder="পূর্ণ নাম লিখুন">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">অন্যান্য মেম্বারগণ (ঐচ্ছিক)</label>
-                        <div class="row g-2">
-                            <div class="col-4"><input type="text" name="member_2" class="form-control" placeholder="মেম্বার ২"></div>
-                            <div class="col-4"><input type="text" name="member_3" class="form-control" placeholder="মেম্বার ৩"></div>
-                            <div class="col-4"><input type="text" name="member_4" class="form-control" placeholder="মেম্বার ৪"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">ওয়েব ফাইল আপলোড (.zip বা .html)</label>
-                        <input type="file" name="web_file" class="form-control" accept=".zip,.html">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary">বুকিং করার জন্য স্লট নির্বাচন করুন</label>
-                        <select name="slot_id" class="form-select" required>
-                            <option value="">একটি স্লট বেছে নিন...</option>
-                            {% for slot in slots %}
-                            <option value="{{ slot.id }}">⏳ {{ slot.slot_time }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-gradient-success w-100 py-2.5 rounded-3 text-white shadow-sm fw-bold">
-                        <i class="fa-solid fa-paper-plane me-2"></i> সাবমিট ও অটো-বুক স্লট
-                    </button>
-                </form>
+<div class="container">
+    <!-- বাম পাশের ফর্ম: গ্রুপ ও ফাইল -->
+    <div class="card card-custom">
+        <h4 class="section-title">👥 ১ থেকে ৪ জনের গ্রুপ ও ফাইল ফর্ম</h4>
+        <form action="/create-group" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">গ্রুপের নাম (বা একক নাম)</label>
+                <input type="text" name="group_name" class="form-control" required placeholder="উদা: টিম এ বা আপনার নাম">
             </div>
-        </div>
+            
+            <div class="mb-3">
+                <label class="form-label">মেম্বার ১ (আবশ্যিক)</label>
+                <input type="text" name="member_1" class="form-control" required placeholder="পূর্ণ নাম লিখুন">
+            </div>
 
-        <!-- ফর্ম ২: ম্যানুয়াল পেমেন্ট -->
-        <div class="col-lg-6">
-            <div class="card card-custom p-4">
-                <h4 class="section-title"><i class="fa-solid fa-wallet text-primary me-2"></i> ম্যানুয়ালি পেমেন্ট সম্পূর্ণ করুন</h4>
-                <div class="alert alert-warning border-0 rounded-3 shadow-sm mb-4">
-                    <i class="fa-solid fa-circle-info me-2"></i> আমাদের বিকাশ/নগদ পার্সোনাল নম্বরে টাকা পাঠিয়ে নিচে তথ্য দিন:<br>
-                    <strong class="fs-5 text-dark"><i class="fa-solid fa-phone me-1 mt-2"></i> 01XXXXXXXXX</strong>
+            <div class="mb-3">
+                <label class="form-label">অন্যান্য মেম্বারগণ (ঐচ্ছিক)</label>
+                <div class="row-grid">
+                    <input type="text" name="member_2" class="form-control" placeholder="মেম্বার ২">
+                    <input type="text" name="member_3" class="form-control" placeholder="মেম্বার ৩">
+                    <input type="text" name="member_4" class="form-control" placeholder="মেম্বার ৪">
                 </div>
-                
-                <form action="/submit-payment" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary">আপনার বুকিং করা স্লট আইডি (Slot ID)</label>
-                        <input type="number" name="slot_id" class="form-control" required placeholder="স্লট আইডি নম্বরটি লিখুন">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary">Transaction ID (TxnID)</label>
-                        <input type="text" name="txn_id" class="form-control" required placeholder="বিকাশ বা নগদের ট্রানজেকশন আইডি">
-                    </div>
-
-                    <button type="submit" class="btn btn-gradient-primary w-100 py-2.5 rounded-3 text-white shadow-sm fw-bold">
-                        <i class="fa-solid fa-check-double me-2"></i> পেমেন্ট আইডি সাবমিট করুন
-                    </button>
-                </form>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">ওয়েব ফাইল আপলোড (.zip বা .html)</label>
+                <input type="file" name="web_file" class="form-control" accept=".zip,.html">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">বুকিং করার জন্য স্লট নির্বাচন করুন</label>
+                <select name="slot_id" class="form-select" required>
+                    <option value="">একটি স্লট বেছে নিন...</option>
+                    {% for slot in slots %}
+                    <option value="{{ slot.id }}">⏳ Slot Time: {{ slot.slot_time }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-gradient-success">সাবমিট ও অটো-বুক স্লট</button>
+        </form>
+    </div>
+
+    <!-- ডান পাশের ফর্ম: পেমেন্ট সাবমিশন -->
+    <div class="card card-custom">
+        <h4 class="section-title">💳 ম্যানুয়ালি পেমেন্ট সম্পূর্ণ করুন</h4>
+        <div class="alert-info-box">
+            আমাদের বিকাশ/নগদ পার্সোনাল নম্বরে টাকা পাঠিয়ে নিচে তথ্য দিন:<br>
+            <strong>📞 01XXXXXXXXX</strong>
         </div>
+        
+        <form action="/submit-payment" method="POST">
+            <div class="mb-3">
+                <label class="form-label">আপনার বুকিং করা স্লট আইডি (Slot ID)</label>
+                <input type="number" name="slot_id" class="form-control" required placeholder="স্লট আইডি নম্বরটি লিখুন">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Transaction ID (TxnID)</label>
+                <input type="text" name="txn_id" class="form-control" required placeholder="বিকাশ বা নগদের ট্রানজেকশন আইডি">
+            </div>
+
+            <button type="submit" class="btn btn-gradient-primary">পেমেন্ট আইডি সাবমিট করুন</button>
+        </form>
     </div>
 </div>
 
-<script src="https://jsdelivr.net"></script>
 </body>
 </html>
