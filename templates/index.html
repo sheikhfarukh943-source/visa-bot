@@ -1,157 +1,81 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SlotBuddy - IVAC Login & Automation Panel</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #1e293b; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        h2 { text-align: center; color: #38bdf8; margin-bottom: 25px; font-size: 24px; font-weight: 600; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; color: #94a3b8; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: white; box-sizing: border-box; font-size: 15px; }
-        input:focus, select:focus { border-color: #38bdf8; outline: none; }
-        button { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background 0.2s; }
-        button:hover { background: #0369a1; }
-        
-        /* ওটিপি এবং স্ট্যাটাস সেকশন */
-        #status-box { margin-top: 20px; padding: 12px; border-radius: 8px; text-align: center; font-size: 14px; display: none; font-weight: 500; }
-        .status-waiting { background: #1e293b; border: 1px solid #475569; color: #e2e8f0; }
-        .status-processing { background: #1e3a8a; color: #60a5fa; border: 1px solid #3b82f6; }
-        .status-success { background: #065f46; color: #34d399; border: 1px solid #10b981; }
-        .status-error { background: #991b1b; color: #f87171; border: 1px solid #ef4444; }
-
-        #otp-zone { display: none; margin-top: 20px; padding: 20px; background: #1e293b; border: 2px dashed #eab308; border-radius: 10px; }
-        .pay-link { display: block; width: 100%; text-align: center; padding: 14px; background: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; box-sizing: border-box; font-size: 16px; }
-        .pay-link:hover { background: #16a34a; }
-    </style>
+    <title>স্বয়ংক্রিয় স্লট বুকিং সিস্টেম</title>
+    <link rel="stylesheet" href="https://jsdelivr.net">
 </head>
-<body>
-
-<div class="container">
-    <h2>🎰 SlotBuddy IVAC Login Panel</h2>
-    
-    <!-- আইভ্যাক লগইন ও প্রিলোড ফর্ম -->
-    <form id="ivac-login-form" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="center">ভিসা সেন্টার (Visa Center)</label>
-            <select name="center" id="center">
-                <option value="Dhaka">Dhaka (Jamuna Future Park)</option>
-                <option value="Chittagong">Chittagong</option>
-                <option value="Sylhet">Sylhet</option>
-                <option value="Rajshahi">Rajshahi</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="passport">পাসপোর্ট নম্বর (Passport No.)</label>
-            <input type="text" name="passport" id="passport" placeholder="उदा. A00000000" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="phone">মোবাইল নম্বর (Registered Mobile)</label>
-            <input type="text" name="phone" id="phone" placeholder="उदा. 017XXXXXXXX" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="web_file">ওয়েব ফাইল সংযুক্ত করুন (PDF/Image)</label>
-            <input type="file" name="web_file" id="web_file" accept=".pdf, image/*" required>
-        </div>
-        
-        <button type="button" onclick="loginAndPreload()">লগইন ও বট সচল করুন</button>
-    </form>
-
-    <!-- বটের লাইভ কাজের লগ -->
-    <div id="status-box"></div>
-
-    <!-- ডাইনামিক ওটিপি সাবমিশন ইন্টারফেস -->
-    <div id="otp-zone">
-        <label for="otp-val" style="color: #eab308; font-weight: bold; margin-bottom: 8px;">মোবাইলে আসা OTP কোডটি এখানে লিখুন:</label>
-        <input type="text" id="otp-val" placeholder="XXXXXX" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 5px;">
-        <button type="button" onclick="submitOtpToBot()" style="background:#eab308; color: #0f172a; margin-top: 12px;">ওটিপি নিশ্চিত করুন</button>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>স্লট বুকিং ও গ্রুপ ফাইল আপলোড ড্যাশবোর্ড</h2>
+        <a href="/login" class="btn btn-outline-primary">লগইন</a>
     </div>
-    
-    <!-- পেমেন্ট বাটন জোন -->
-    <div id="payment-container"></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- গ্রুপ ও ফাইল ফর্ম -->
+        <div class="col-md-6">
+            <div class="card p-4 shadow-sm mb-4">
+                <h4>১ থেকে ৪ জনের গ্রুপ ও ফাইল ফর্ম</h4>
+                <form action="/create-group" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">গ্রুপের নাম (বা একক নাম)</label>
+                        <input type="text" name="group_name" class="form-content form-control" required placeholder="উদা: টিম এ বা আপনার নাম">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">মেম্বার ১ (আবশ্যিক)</label>
+                        <input type="text" name="member_1" class="form-control" required placeholder="পূর্ণ নাম">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-2"><input type="text" name="member_2" class="form-control" placeholder="মেম্বার ২ (ঐচ্ছিক)"></div>
+                        <div class="col-md-4 mb-2"><input type="text" name="member_3" class="form-control" placeholder="মেম্বার ৩ (ঐচ্ছিক)"></div>
+                        <div class="col-md-4 mb-2"><input type="text" name="member_4" class="form-control" placeholder="মেম্বার ৪ (ঐচ্ছিক)"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">স্লটের জন্য ওয়েব ফাইল আপলোড (.zip বা .html)</label>
+                        <input type="file" name="web_file" class="form-control" accept=".zip,.html">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">বুকিং করার জন্য স্লট নির্বাচন করুন</label>
+                        <select name="slot_id" class="form-select" required>
+                            <option value="">একটি স্লট বেছে নিন...</option>
+                            {% for slot in slots %}
+                            <option value="{{ slot.id }}">{{ slot.slot_time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">সাবমিট ও অটো-বুক স্লট</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ম্যানুয়াল পেমেন্ট সাবমিশন -->
+        <div class="col-md-6">
+            <div class="card p-4 shadow-sm">
+                <h4>ম্যানুয়ালি পেমেন্ট সম্পূর্ণ করুন</h4>
+                <div class="alert alert-info">আমাদের বিকাশ/নগদ পার্সোনাল নম্বরে টাকা পাঠিয়ে নিচে ট্রানজেকশন আইডি দিন: <strong>01XXXXXXXXX</strong></div>
+                <form action="/submit-payment" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">আপনার বুকিং করা স্লট আইডি</label>
+                        <input type="number" name="slot_id" class="form-control" required placeholder="স্লট আইডি লিখুন">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID (TxnID)</label>
+                        <input type="text" name="txn_id" class="form-control" required placeholder="বিকাশ বা নগদের ট্রানজেকশন আইডি">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">পেমেন্ট ট্রানজেকশন আইডি সাবমিট করুন</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-
-<script>
-    let sessionKey = null;
-    let statusChecker = null;
-
-    async function loginAndPreload() {
-        const form = document.getElementById('ivac-login-form');
-        const formData = new FormData(form);
-        
-        updateStatus('⏳ তথ্য ও ফাইল ব্যাকএন্ডে আপলোড করা হচ্ছে...', 'status-processing');
-
-        try {
-            let response = await fetch('/pre-load', { method: 'POST', body: formData });
-            let data = await response.json();
-            
-            if(data.status === 'queued') {
-                sessionKey = data.session_id;
-                updateStatus('🟢 বট ব্যাকএন্ডে সচল। আইভ্যাক সার্ভার ট্র্যাকিং শুরু হয়েছে...', 'status-waiting');
-                // প্রতি ২ সেকেন্ড পর পর ব্যাকএন্ড বটের লাইভ স্ট্যাটাস চেক করা হবে (Polling)
-                statusChecker = setInterval(trackBotProgress, 2000);
-            } else {
-                updateStatus('❌ ত্রুটি: ' + data.message, 'status-error');
-            }
-        } catch (err) {
-            updateStatus('❌ সার্ভার রেসপন্স করছে না।', 'status-error');
-        }
-    }
-
-    async function trackBotProgress() {
-        if(!sessionKey) return;
-        
-        let response = await fetch('/poll-status/' + sessionKey);
-        let data = await response.json();
-
-        if(data.status === 'server_waiting') {
-            updateStatus('🤖 অ্যান্টি-ব্লক মোডে বট আইভ্যাক মূল পোর্টাল খোলার অপেক্ষা করছে...', 'status-waiting');
-        } else if(data.status === 'processing_fields') {
-            updateStatus('⚡ সার্ভার রেডি! বট আপনার তথ্য দিয়ে পোর্টালে ফর্ম পূরণ করছে...', 'status-processing');
-        } else if(data.status === 'waiting_for_otp') {
-            updateStatus('🔑 ওটিপি পেজ এসেছে! দ্রুত নিচের বক্সে OTP টাইপ করুন।', 'status-processing');
-            document.getElementById('otp-zone').style.display = 'block';
-        } else if(data.status === 'completed') {
-            clearInterval(statusChecker);
-            document.getElementById('otp-zone').style.display = 'none';
-            
-            if(data.result && data.result.status === 'success') {
-                updateStatus('🎉 স্লট সফলভাবে লক করা হয়েছে!', 'status-success');
-                document.getElementById('payment-container').innerHTML = `
-                    <a href="${data.result.payment_url}" target="_blank" class="pay-link">💳 ম্যানুয়ালি পেমেন্ট সম্পন্ন করুন</a>
-                `;
-            } else {
-                updateStatus('❌ ব্যর্থ: ' + data.result.message, 'status-error');
-            }
-        }
-    }
-
-    async function submitOtpToBot() {
-        const otp = document.getElementById('otp-val').value;
-        if(!otp) return alert('দয়া করে ওটিপি কোডটি টাইপ করুন।');
-        
-        updateStatus('🚀 ওটিপি রানিং ব্রাউজার সেশনে ইনজেক্ট করা হচ্ছে...', 'status-processing');
-        
-        await fetch('/submit-otp', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ session_id: sessionKey, otp: otp })
-        });
-        
-        document.getElementById('otp-zone').style.display = 'none';
-    }
-
-    function updateStatus(text, className) {
-        const box = document.getElementById('status-box');
-        box.style.display = 'block';
-        box.innerText = text;
-        box.className = box.className.split(' ')[0] + ' ' + className; // স্টাইল পরিবর্তন
-    }
-</script>
 </body>
 </html>
