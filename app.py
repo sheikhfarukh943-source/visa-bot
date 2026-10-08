@@ -56,7 +56,7 @@ def create_group():
         try:
             slot_res = supabase.table("slots").select("slot_time").eq("id", int(slot_id)).execute()
             if slot_res.data and len(slot_res.data) > 0:
-                slot_time_str = slot_res.data[0]['slot_time'].replace('Z', '+00:00')
+                slot_time_str = slot_res.data['slot_time'].replace('Z', '+00:00')
                 slot_time = datetime.fromisoformat(slot_time_str)
                 now = datetime.now(timezone.utc)
                 time_diff = (slot_time - now).total_seconds() / 60
@@ -87,7 +87,7 @@ def create_group():
     try:
         group_res = supabase.table("group_bookings").insert(group_data).execute()
         if group_res.data and len(group_res.data) > 0 and slot_id:
-            new_group_id = group_res.data[0]['id']
+            new_group_id = group_res.data['id']
             # স্বয়ংক্রিয়ভাবে স্লট স্টেটাস pending করা
             supabase.table("slots").update({
                 "status": "pending", 
@@ -138,5 +138,6 @@ def approve_payment(slot_id):
     return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    # এই অংশটি Render-এর পোর্ট (যেমন: 10000) অটোমেটিকভাবে রিড করবে
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port, debug=False)
