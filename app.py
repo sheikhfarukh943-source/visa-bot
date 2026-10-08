@@ -1,136 +1,90 @@
 import os
-import secrets
+from flask import Flask, render_template, request, redirect, url_value_preprocessor, flash
+from supabase import create_client, Client
+from werkzeug.utils import secure_filename
 from datetime import datetime
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///management.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.secret_key = "super-secret-key-for-session"
 
-UPLOAD_FOLDER = 'uploaded_files'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Supabase কানেকশন সেটআপ (Render Env Vars থেকে রিড করবে)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# সেশন এবং আপলোড লগ ডাটা মেমরিতে স্থায়ী ও ওপেন রাখা হলো
-active_sessions = {}
-admin_stats = {"total_uploads": 0, "successful_bookings": 0, "failed_bookings": 0, "history": []}
+# ফাইল আপলোডের কনফিগারেশন
+UPLOAD_FOLDER = '/tmp' # Render-এর সাময়িক লোকাল স্টোরেজ
+ALLOWED_EXTENSIONS = {'zip', 'pdf', 'html'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), default="User")
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    def set_password(self, password):
-        from werkzeug.security import generate_password_hash
-        self.password_hash = generate_password_hash(password)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-    def check_password(self, password):
-        from werkzeug.security import check_password_hash
-        return check_password_hash(self.password_hash, password)
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
-with app.app_context():
-    db.drop_all() # জ্যাম লাগা পুরনো ডেটাবেজ টেবিল সম্পূর্ণ ফ্লাশ ও রিসেট করা হলো
-    db.create_all()
-    if not User.query.filter_by(username="admin_farukh").first():
-        admin = User(username="admin_farukh", role="Admin")
-        admin.set_password("Farukh@1997Lima")
-        db.session.add(admin)
-        db.session.commit()
-
-# শতভাগ ডাইরেক্ট রাউট: পেজে ঢোকা মাত্রই কোনো কন্ডিশন ছাড়া সরাসরি মেইন ড্যাশবোর্ড লোড হবে
-@app.route("/")
-def home():
-    all_users = User.query.all()
-    users_list = [{"username": u.username, "role": u.role} for u in all_users]
-    live_list = list(active_sessions.values())
-    return render_template("admin.html", users_list=users_list, stats=admin_stats, live_sessions=live_list)
-
-@app.route("/admin")
-def admin_dashboard():
-    return redirect(url_for('home'))
-
-@app.route("/pre-load-group", methods=["POST"])
-def pre_load_group():
-    center = request.form.get("center")
-    visa_type = request.form.get("visa_type")
-    ivac_phone = request.form.get("ivac_phone")
-    ivac_pass = request.form.get("ivac_pass")
+# গ্রুপ তৈরি এবং ফাইল আপলোড লজিক
+@app.route('/create-group', methods=['POST'])
+def create_group():
+    # কারেন্ট টাইম চেক করে স্লট লক লজিক ইমপ্লিমেন্ট করা যায়
+    # উদাহরণ: স্লট টাইম যদি রাত ৮টা হয়, তবে তার ২০ মিনিট আগে লক হবে
     
-    if not ivac_phone or not ivac_pass:
-        return redirect(url_for('home'))
-
-    file_obj = request.files.get("file_1")
-    if not file_obj or file_obj.filename == '':
-        return redirect(url_for('home'))
-
-    uploaded_count = 0
-    # ৪ জন মেম্বারের ৪টি ফাইল প্রসেসিং সিস্টেম
-    for i in range(1, 5):
-        f_obj = request.files.get(f"file_{i}")
-        if f_obj and f_obj.filename != '':
-            filename = f"{ivac_phone}_member_{i}_{f_obj.filename}"
-            f_obj.save(os.path.join(UPLOAD_FOLDER, filename))
-            uploaded_count += 1
-
-    admin_stats["total_uploads"] += 1
-    session_id = f"session_{ivac_phone}"
+    group_name = request.form.get('group_name')
+    m1 = request.form.get('member_1')
+    m2 = request.form.get('member_2')
+    m3 = request.form.get('member_3')
+    m4 = request.form.get('member_4')
     
-    active_sessions[session_id] = {
-        "id": session_id,
-        "phone": ivac_phone,
-        "center": center,
-        "visa_type": visa_type,
-        "status": "waiting_for_otp"
+    file = request.files.get('web_file')
+    file_url = ""
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # বাস্তব প্রজেক্টে এই ফাইলটি Cloudinary বা Google Drive-এ আপলোড করা নিরাপদ
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        file_url = f"Local_Temp_Storage/{filename}"
+
+    # Supabase-এ ডেটা সেভ করা
+    data = {
+        "group_name": group_name,
+        "member_1_name": m1,
+        "member_2_name": m2,
+        "member_3_name": m3,
+        "member_4_name": m4,
+        "uploaded_file_url": file_url
     }
-
-    admin_stats["history"].append({
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "passport": ivac_phone,
-        "center": center,
-        "filename": f"{visa_type} ({uploaded_count} Files)",
-        "status": "Processed"
-    })
     
-    return redirect(url_for('home'))
-
-@app.route("/admin/create-user", methods=["POST"])
-def create_user():
-    username = request.form.get("username")
-    password = request.form.get("password")
-    role = request.form.get("role")
-    
-    if not username or not password:
-        return redirect(url_for('home'))
+    try:
+        supabase.table("group_bookings").insert(data).execute()
+        flash("গ্রুপ এবং ফাইল সফলভাবে আপলোড হয়েছে!", "success")
+    except Exception as e:
+        flash(f"ত্রুটি ঘটেছে: {str(e)}", "danger")
         
-    if User.query.filter_by(username=username).first(): 
-        return redirect(url_for('home'))
-        
-    new_user = User(username=username, role=role)
-    new_user.set_password(password)
-    db.session.add(new_user)
-    db.session.commit()
-    
-    return redirect(url_for('home'))
+    return redirect('/')
 
-@app.route("/api/live-sessions", methods=["GET"])
-def get_live_sessions():
-    return jsonify(list(active_sessions.values()))
+# ম্যানুয়াল পেমেন্ট ভেরিফিকেশন (অ্যাডমিন প্যানেল)
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    # ডাটাবেজ থেকে সব বুকিং রিকোয়েস্ট নিয়ে আসা
+    bookings = supabase.table("group_bookings").select("*").execute()
+    slots_data = supabase.table("slots").select("*").execute()
+    return render_template('admin.html', bookings=bookings.data, slots=slots_data.data)
 
-@app.route("/api/submit-otp", methods=["POST"])
-def api_submit_otp():
-    data = request.json
-    s_id = data.get("session_id")
-    if s_id in active_sessions:
-        active_sessions[s_id]["status"] = "slot_booking_in_progress"
-        return jsonify({"status": "success", "message": "ওটিপি বটের কাছে পাঠানো হয়েছে। "})
-    return jsonify({"status": "error", "message": "সেশন সক্রিয় নেই। "})
+@app.route('/admin/approve-payment/<int:slot_id>', methods=['POST'])
+def approve_payment(slot_id):
+    # ম্যানুয়াল পেমেন্ট চেক করার পর অ্যাডমিন স্ট্যাটাস কনফার্ম করবেন
+    try:
+        supabase.table("slots").update({"status": "confirmed"}).eq("id", slot_id).execute()
+        flash("পেমেন্ট সফলভাবে ভেরিফাই এবং কনফার্ম করা হয়েছে।", "success")
+    except Exception as e:
+        flash(f"আপডেট করতে সমস্যা হয়েছে: {str(e)}", "danger")
+    return redirect('/admin/dashboard')
 
-@app.route("/logout")
-def logout():
-    return redirect(url_for('home'))
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+if __name__ == '__main__':
+    app.run(debug=True)
